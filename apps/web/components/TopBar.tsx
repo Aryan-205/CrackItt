@@ -1,12 +1,13 @@
-import { GraduationCap, Moon, Search } from "lucide-react";
+import { GraduationCap, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function TopBar() {
   return (
-    <header className="flex items-center gap-4 border-b border-border bg-card px-6 py-3">
+    <header className="flex items-center justify-between border-b border-border w-full px-6 py-3">
       <div className="relative max-w-xl flex-1">
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -32,9 +33,7 @@ export function TopBar() {
           Tutor
         </Button>
         <Button size="sm">Get Premium</Button>
-        <Button variant="ghost" size="icon" aria-label="Toggle dark mode">
-          <Moon className="h-4 w-4" />
-        </Button>
+        <ThemeToggle />
       </div>
     </header>
   );

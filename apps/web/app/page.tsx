@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Card,
   CardDescription,
@@ -14,6 +15,7 @@ export default function LandingPage() {
       <header className="flex items-center justify-between px-6 py-4">
         <span className="text-xl font-bold text-primary">crackitt</span>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
             Dashboard
           </Button>

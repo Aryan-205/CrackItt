@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 
 export function BlogCard({ post }: { post: BlogPost }) {
   return (
-    <Link href={`/community/${post.slug}`}>
+    <Link href={`/community/blog/${post.slug}`}>
       <Card className="h-full transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-center gap-2">

@@ -6,9 +6,12 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
+  FolderKanban,
   GraduationCap,
+  HelpCircle,
   Home,
   MessageSquare,
+  Newspaper,
   PlayCircle,
   Users,
 } from "lucide-react";
@@ -25,9 +28,14 @@ const learnItems = [
   { href: "/learn/behavioral", label: "Behavioral" },
 ];
 
+const communityItems = [
+  { href: "/community/blog", label: "Blog", icon: Newspaper },
+  { href: "/community/questions", label: "Questions", icon: HelpCircle },
+  { href: "/community/projects", label: "Projects", icon: FolderKanban },
+];
+
 const navItems = [
   { href: "/practice", label: "Practice", icon: GraduationCap },
-  { href: "/community", label: "Community", icon: Users },
   { href: "/tutorials", label: "Tutorials", icon: PlayCircle },
 ];
 
@@ -60,6 +68,9 @@ function NavLink({
 export function Sidebar() {
   const pathname = usePathname();
   const [learnOpen, setLearnOpen] = useState(pathname.startsWith("/learn"));
+  const [communityOpen, setCommunityOpen] = useState(
+    pathname.startsWith("/community"),
+  );
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 py-4">
@@ -107,6 +118,48 @@ export function Sidebar() {
                   )}
                   render={<Link href={item.href} />}
                 >
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <Button
+            variant={
+              pathname.startsWith("/community") ? "secondary" : "ghost"
+            }
+            className={cn(
+              "w-full justify-start gap-3",
+              pathname.startsWith("/community") &&
+                "bg-primary/10 text-primary hover:bg-primary/15",
+            )}
+            onClick={() => setCommunityOpen(!communityOpen)}
+          >
+            <Users className="h-4 w-4" />
+            <span className="flex-1 text-left">Community</span>
+            {communityOpen ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+          {communityOpen && (
+            <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
+              {communityItems.map((item) => (
+                <Button
+                  key={item.href}
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "justify-start gap-2 px-2",
+                    pathname.startsWith(item.href) &&
+                      "font-medium text-primary hover:text-primary",
+                  )}
+                  render={<Link href={item.href} />}
+                >
+                  <item.icon className="h-3.5 w-3.5" />
                   {item.label}
                 </Button>
               ))}

@@ -11,7 +11,7 @@ export function GreetingCard({ name }: { name: string }) {
     hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
   return (
-    <Card className="border-0 bg-gradient-to-r from-primary to-orange-400 text-primary-foreground ring-0">
+    <Card className="border-0 bg-gradient-to-r from-primary to-foreground/80 text-primary-foreground ring-0">
       <CardHeader>
         <CardTitle className="text-2xl text-primary-foreground">
           {greeting}, {name}!

@@ -20,7 +20,9 @@ export function ContentFeed({ items }: { items: DashboardFeedItem[] }) {
           <Link
             key={item.id}
             href={
-              item.type === "blog" ? `/community/${item.slug}` : `/tutorials`
+              item.type === "blog"
+                ? `/community/blog/${item.slug}`
+                : `/tutorials`
             }
           >
             <Card size="sm" className="transition-shadow hover:shadow-md">
