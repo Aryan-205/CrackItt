@@ -8,7 +8,7 @@ export default async function TutorialsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Tutorials</h1>
-        <p className="mt-1 text-muted">
+        <p className="mt-1 text-muted-foreground">
           Video tutorials for system design and interview preparation topics.
         </p>
       </div>

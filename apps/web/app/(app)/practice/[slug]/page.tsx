@@ -1,6 +1,14 @@
 import { getQuestion } from "../../../../lib/api";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function QuestionDetailPage({
   params,
@@ -20,28 +28,42 @@ export default async function QuestionDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/practice" className="text-sm text-primary hover:underline">
+      <Button
+        variant="link"
+        className="w-fit px-0"
+        render={<Link href="/practice" />}
+      >
         ← Back to Practice
-      </Link>
+      </Button>
       <div>
         <div className="mb-2 flex items-center gap-2">
-          <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-            {question.categoryLabel}
-          </span>
-          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium capitalize text-gray-700">
+          <Badge variant="secondary">{question.categoryLabel}</Badge>
+          <Badge variant="outline" className="capitalize">
             {question.difficulty}
-          </span>
+          </Badge>
         </div>
         <h1 className="text-2xl font-bold">{question.title}</h1>
       </div>
-      <div className="rounded-xl border border-border bg-card p-5">
-        <h2 className="mb-2 font-semibold">Question</h2>
-        <p className="text-muted leading-relaxed">{question.prompt}</p>
-      </div>
-      <div className="rounded-xl border border-border bg-card p-5">
-        <h2 className="mb-2 font-semibold">Solution</h2>
-        <p className="text-muted leading-relaxed">{question.solution}</p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Question</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="leading-relaxed text-muted-foreground">
+            {question.prompt}
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Solution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="leading-relaxed text-muted-foreground">
+            {question.solution}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

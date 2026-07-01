@@ -8,7 +8,7 @@ export default async function PracticePage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Practice</h1>
-        <p className="mt-1 text-muted">
+        <p className="mt-1 text-muted-foreground">
           Interview questions with solutions across frontend, backend, and full
           stack.
         </p>

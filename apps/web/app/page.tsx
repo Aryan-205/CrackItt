@@ -1,50 +1,52 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between px-6 py-4">
         <span className="text-xl font-bold text-primary">crackitt</span>
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
             Dashboard
-          </Link>
-          <Link
-            href="/dashboard"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
-          >
+          </Button>
+          <Button size="sm" render={<Link href="/dashboard" />}>
             Get Started
-          </Link>
+          </Button>
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-primary/5 to-background px-6 py-20 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-primary/10 via-accent/30 to-background px-6 py-20 text-center">
         <div className="max-w-3xl">
-          <p className="mb-4 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary inline-block">
-            Free for a limited time
-          </p>
+          <Badge className="mb-4">Free for a limited time</Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Ace your next interview with{" "}
             <span className="text-primary">crackitt</span>
           </h1>
-          <p className="mt-6 text-lg text-muted leading-relaxed">
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
             One platform for frontend, backend, and full stack interview prep.
             Practice questions with solutions, watch system design tutorials,
             join the community, and build your learning streak.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link
-              href="/dashboard"
-              className="w-full rounded-xl bg-primary px-8 py-3 text-base font-medium text-white hover:bg-primary-dark sm:w-auto"
-            >
+            <Button size="lg" className="w-full sm:w-auto" render={<Link href="/dashboard" />}>
               Start Practicing
-            </Link>
-            <Link
-              href="/practice"
-              className="w-full rounded-xl border border-border bg-card px-8 py-3 text-base font-medium hover:bg-card-muted sm:w-auto"
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto"
+              render={<Link href="/practice" />}
             >
               Browse Questions
-            </Link>
+            </Button>
           </div>
         </div>
 
@@ -63,13 +65,12 @@ export default function LandingPage() {
               desc: "Blogs, guides, and peer support",
             },
           ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-xl border border-border bg-card p-6 text-left"
-            >
-              <h3 className="font-semibold text-primary">{item.title}</h3>
-              <p className="mt-2 text-sm text-muted">{item.desc}</p>
-            </div>
+            <Card key={item.title} className="text-left">
+              <CardHeader>
+                <CardTitle className="text-primary">{item.title}</CardTitle>
+                <CardDescription>{item.desc}</CardDescription>
+              </CardHeader>
+            </Card>
           ))}
         </div>
       </main>

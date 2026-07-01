@@ -29,7 +29,7 @@ export default async function LearnCategoryPage({
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">{label}</h1>
-        <p className="mt-1 text-muted">
+        <p className="mt-1 text-muted-foreground">
           Learn and practice {label.toLowerCase()} interview questions.
         </p>
       </div>
@@ -39,7 +39,7 @@ export default async function LearnCategoryPage({
         ))}
       </div>
       {questions.length === 0 && (
-        <p className="text-muted">No questions in this category yet.</p>
+        <p className="text-muted-foreground">No questions in this category yet.</p>
       )}
     </div>
   );

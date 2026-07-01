@@ -13,6 +13,9 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const learnItems = [
   { href: "/learn/system-design", label: "System Design" },
@@ -23,7 +26,6 @@ const learnItems = [
 ];
 
 const navItems = [
-  { href: "/dashboard", label: "Your Dashboard", icon: Home },
   { href: "/practice", label: "Practice", icon: GraduationCap },
   { href: "/community", label: "Community", icon: Users },
   { href: "/tutorials", label: "Tutorials", icon: PlayCircle },
@@ -41,28 +43,26 @@ function NavLink({
   active: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-        active
-          ? "bg-primary/10 text-primary"
-          : "text-foreground/70 hover:bg-card-muted hover:text-foreground"
-      }`}
+    <Button
+      variant={active ? "secondary" : "ghost"}
+      className={cn(
+        "w-full justify-start gap-3",
+        active && "bg-primary/10 text-primary hover:bg-primary/15",
+      )}
+      render={<Link href={href} />}
     >
       <Icon className="h-4 w-4" />
       {label}
-    </Link>
+    </Button>
   );
 }
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [learnOpen, setLearnOpen] = useState(
-    pathname.startsWith("/learn"),
-  );
+  const [learnOpen, setLearnOpen] = useState(pathname.startsWith("/learn"));
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card px-3 py-4">
+    <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 py-4">
       <Link href="/dashboard" className="mb-6 px-3">
         <span className="text-lg font-bold text-primary">crackitt</span>
       </Link>
@@ -76,14 +76,14 @@ export function Sidebar() {
         />
 
         <div>
-          <button
-            type="button"
+          <Button
+            variant={pathname.startsWith("/learn") ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-3",
+              pathname.startsWith("/learn") &&
+                "bg-primary/10 text-primary hover:bg-primary/15",
+            )}
             onClick={() => setLearnOpen(!learnOpen)}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              pathname.startsWith("/learn")
-                ? "bg-primary/10 text-primary"
-                : "text-foreground/70 hover:bg-card-muted hover:text-foreground"
-            }`}
           >
             <BookOpen className="h-4 w-4" />
             <span className="flex-1 text-left">Learn</span>
@@ -92,27 +92,29 @@ export function Sidebar() {
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-          </button>
+          </Button>
           {learnOpen && (
             <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
               {learnItems.map((item) => (
-                <Link
+                <Button
                   key={item.href}
-                  href={item.href}
-                  className={`rounded-md px-2 py-1.5 text-sm ${
-                    pathname === item.href
-                      ? "font-medium text-primary"
-                      : "text-muted hover:text-foreground"
-                  }`}
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "justify-start px-2",
+                    pathname === item.href &&
+                      "font-medium text-primary hover:text-primary",
+                  )}
+                  render={<Link href={item.href} />}
                 >
                   {item.label}
-                </Link>
+                </Button>
               ))}
             </div>
           )}
         </div>
 
-        {navItems.slice(1).map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.href}
             href={item.href}
@@ -123,11 +125,10 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto border-t border-border pt-4">
-        <div className="flex items-center gap-2 px-3 text-xs text-muted">
-          <MessageSquare className="h-3.5 w-3.5" />
-          <span>Community Member</span>
-        </div>
+      <Separator className="mt-auto" />
+      <div className="flex items-center gap-2 px-3 pt-4 text-xs text-muted-foreground">
+        <MessageSquare className="h-3.5 w-3.5" />
+        <span>Community Member</span>
       </div>
     </aside>
   );

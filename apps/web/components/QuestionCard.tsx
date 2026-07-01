@@ -1,32 +1,37 @@
 import type { Question } from "@repo/types";
 import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-const difficultyColors = {
-  easy: "bg-green-100 text-green-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  hard: "bg-red-100 text-red-700",
+const difficultyVariant = {
+  easy: "secondary" as const,
+  medium: "outline" as const,
+  hard: "destructive" as const,
 };
 
 export function QuestionCard({ question }: { question: Question }) {
   return (
-    <Link
-      href={`/practice/${question.slug}`}
-      className="block rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm"
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          {question.categoryLabel}
-        </span>
-        <span
-          className={`rounded px-2 py-0.5 text-xs font-medium capitalize ${
-            difficultyColors[question.difficulty]
-          }`}
-        >
-          {question.difficulty}
-        </span>
-      </div>
-      <h3 className="font-medium">{question.title}</h3>
-      <p className="mt-1 line-clamp-2 text-sm text-muted">{question.prompt}</p>
+    <Link href={`/practice/${question.slug}`}>
+      <Card className="h-full transition-shadow hover:shadow-md">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{question.categoryLabel}</Badge>
+            <Badge variant={difficultyVariant[question.difficulty]}>
+              {question.difficulty}
+            </Badge>
+          </div>
+          <CardTitle className="text-base">{question.title}</CardTitle>
+          <CardDescription className="line-clamp-2">
+            {question.prompt}
+          </CardDescription>
+        </CardHeader>
+      </Card>
     </Link>
   );
 }

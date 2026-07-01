@@ -3,6 +3,14 @@ import { QuickActionCards } from "../../../components/QuickActionCards";
 import { ProgressSection } from "../../../components/ProgressSection";
 import { getUser } from "../../../lib/api";
 import { DEMO_USER_ID } from "../../../lib/demo-user";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function DashboardPage() {
   const user = await getUser(DEMO_USER_ID);
@@ -11,20 +19,19 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       <GreetingCard name={user.name} />
       <QuickActionCards />
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Personalize your checklists</h2>
-          <button
-            type="button"
-            className="rounded-lg border border-primary px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
-          >
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Personalize your checklists</CardTitle>
+          <Button variant="outline" size="sm">
             + Add Target Company
-          </button>
-        </div>
-        <p className="mt-2 text-sm text-muted">
-          Tailor your preparation roadmap to your target companies.
-        </p>
-      </div>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>
+            Tailor your preparation roadmap to your target companies.
+          </CardDescription>
+        </CardContent>
+      </Card>
       <ProgressSection />
     </div>
   );

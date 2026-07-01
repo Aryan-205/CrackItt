@@ -2,6 +2,17 @@
 
 import { ChevronDown, ChevronRight, Circle } from "lucide-react";
 import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 const steps = [
   {
@@ -26,10 +37,7 @@ const steps = [
     title: "Practice with real questions",
     description:
       "Work through frontend, backend, and full stack interview questions.",
-    tasks: [
-      "Solve 5 frontend questions",
-      "Solve 5 backend questions",
-    ],
+    tasks: ["Solve 5 frontend questions", "Solve 5 backend questions"],
   },
 ];
 
@@ -40,58 +48,56 @@ export function ProgressSection() {
   const percent = Math.round((completed / total) * 100);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">
-          System Design Interview Readiness
-        </h2>
-        <span className="text-sm text-muted">{percent}% completed</span>
-      </div>
-
-      <div className="mb-4 h-2 overflow-hidden rounded-full bg-card-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>System Design Interview Readiness</CardTitle>
+          <Badge variant="secondary">{percent}% completed</Badge>
+        </div>
+        <Progress value={percent} className="mt-2" />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
         {steps.map((step, i) => (
-          <div key={step.title} className="rounded-lg border border-border">
-            <button
-              type="button"
+          <Card key={step.title} size="sm">
+            <Button
+              variant="ghost"
+              className="h-auto w-full justify-start gap-3 p-4"
               onClick={() => setExpanded(expanded === i ? -1 : i)}
-              className="flex w-full items-center gap-3 p-4 text-left"
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+              <Badge className="h-6 w-6 shrink-0 justify-center rounded-full p-0">
                 {i + 1}
-              </span>
-              <span className="flex-1 font-medium">{step.title}</span>
+              </Badge>
+              <span className="flex-1 text-left font-medium">{step.title}</span>
               {expanded === i ? (
-                <ChevronDown className="h-4 w-4 text-muted" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-muted" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
-            </button>
+            </Button>
             {expanded === i && (
-              <div className="border-t border-border px-4 pb-4 pt-2">
-                <p className="mb-3 text-sm text-muted">{step.description}</p>
-                <ul className="flex flex-col gap-2">
-                  {step.tasks.map((task) => (
-                    <li
-                      key={task}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <Circle className="h-4 w-4 text-muted" />
-                      {task}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <>
+                <Separator />
+                <CardContent>
+                  <CardDescription className="mb-3">
+                    {step.description}
+                  </CardDescription>
+                  <ul className="flex flex-col gap-2">
+                    {step.tasks.map((task) => (
+                      <li
+                        key={task}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <Circle className="h-4 w-4 text-muted-foreground" />
+                        {task}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </>
             )}
-          </div>
+          </Card>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
