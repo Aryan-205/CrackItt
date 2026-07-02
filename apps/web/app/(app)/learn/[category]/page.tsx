@@ -1,7 +1,6 @@
-import { QuestionCard } from "../../../../components/QuestionCard";
-import { getQuestions } from "../../../../lib/api";
+import { getFirstLessonSlug } from "@/lib/learn-articles";
 import type { CategorySlug } from "@repo/types";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 const categoryLabels: Record<CategorySlug, string> = {
   "system-design": "System Design",
@@ -22,25 +21,10 @@ export default async function LearnCategoryPage({
     notFound();
   }
 
-  const label = categoryLabels[category as CategorySlug];
-  const questions = await getQuestions(category);
+  const firstLesson = getFirstLessonSlug(category);
+  if (firstLesson) {
+    redirect(`/learn/${category}/${firstLesson}`);
+  }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold">{label}</h1>
-        <p className="mt-1 text-muted-foreground">
-          Learn and practice {label.toLowerCase()} interview questions.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {questions.map((q) => (
-          <QuestionCard key={q.id} question={q} />
-        ))}
-      </div>
-      {questions.length === 0 && (
-        <p className="text-muted-foreground">No questions in this category yet.</p>
-      )}
-    </div>
-  );
+  notFound();
 }
