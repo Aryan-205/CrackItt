@@ -203,13 +203,23 @@ export function ProjectShowcase() {
     const updated = [project, ...projects];
     setProjects(updated);
     saveProjects(updated);
-    setDraft({ title: "", description: "", repoUrl: "", demoUrl: "", tags: "" });
+    setDraft({
+      title: "",
+      description: "",
+      repoUrl: "",
+      demoUrl: "",
+      tags: "",
+    });
     setShowSubmit(false);
   }
 
   const filterTags = useMemo(
-    () =>
-      ["All", ...Array.from(new Set(projects.flatMap((project) => project.tags))).sort()],
+    () => [
+      "All",
+      ...Array.from(
+        new Set(projects.flatMap((project) => project.tags)),
+      ).sort(),
+    ],
     [projects],
   );
 
@@ -275,7 +285,10 @@ export function ProjectShowcase() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmitProject} className="flex flex-col gap-3">
+            <form
+              onSubmit={handleSubmitProject}
+              className="flex flex-col gap-3"
+            >
               <Input
                 placeholder="Project title"
                 value={draft.title}

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Question } from "@repo/types";
 import { Filter, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { QuestionCard } from "./QuestionCard";
@@ -8,7 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export function PracticeSection({ questions }: { questions: Question[] }) {
+export interface PracticeListItem {
+  id: string;
+  title: string;
+  slug: string;
+  categoryLabel: string;
+  difficulty: "easy" | "medium" | "hard";
+  prompt: string;
+}
+
+export function PracticeSection({
+  questions,
+  basePath,
+  title,
+  description,
+  searchPlaceholder = "Search questions...",
+}: {
+  questions: PracticeListItem[];
+  basePath: string;
+  title: string;
+  description: string;
+  searchPlaceholder?: string;
+}) {
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -48,18 +68,15 @@ export function PracticeSection({ questions }: { questions: Question[] }) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold">Practice</h1>
-        <p className="mt-1 text-muted-foreground">
-          Interview questions with solutions across frontend, backend, and full
-          stack.
-        </p>
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <p className="mt-1 text-muted-foreground">{description}</p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search practice questions..."
+            placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
@@ -123,13 +140,13 @@ export function PracticeSection({ questions }: { questions: Question[] }) {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            No practice questions match your current search/filter.
+            No questions match your current search/filter.
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {filtered.map((q) => (
-            <QuestionCard key={q.id} question={q} />
+            <QuestionCard key={q.id} question={q} basePath={basePath} />
           ))}
         </div>
       )}

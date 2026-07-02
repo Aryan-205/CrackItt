@@ -1,4 +1,4 @@
-import type { Question } from "@repo/types";
+import type { PracticeListItem } from "./PracticeSection";
 import Link from "next/link";
 import {
   Card,
@@ -15,9 +15,15 @@ const difficultyVariant = {
   hard: "destructive" as const,
 };
 
-export function QuestionCard({ question }: { question: Question }) {
+export function QuestionCard({
+  question,
+  basePath,
+}: {
+  question: PracticeListItem;
+  basePath: string;
+}) {
   return (
-    <Link href={`/practice/${question.slug}`}>
+    <Link href={`${basePath}/${question.slug}`}>
       <Card className="h-full transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-center gap-2">

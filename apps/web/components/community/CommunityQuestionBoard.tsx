@@ -256,7 +256,7 @@ export function CommunityQuestionBoard() {
 
       {showAskForm && (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <form onSubmit={handleAskQuestion} className="flex flex-col gap-3">
               <Input
                 placeholder="Question title"
@@ -350,7 +350,7 @@ export function CommunityQuestionBoard() {
 
       {showFilters && (
         <Card>
-          <CardContent className="flex flex-col gap-4 pt-6">
+          <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Filter by tags

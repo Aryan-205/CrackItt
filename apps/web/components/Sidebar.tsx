@@ -6,12 +6,15 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
+  Code2,
+  Flame,
   FolderKanban,
   Github,
   GraduationCap,
   HelpCircle,
   Home,
   Mail,
+  MessageSquare,
   Newspaper,
   PlayCircle,
   Twitter,
@@ -37,8 +40,12 @@ const communityItems = [
   { href: "/community/projects", label: "Projects", icon: FolderKanban },
 ];
 
+const practiceItems = [
+  { href: "/practice/coding", label: "Coding Practice", icon: Code2 },
+  { href: "/practice/questions", label: "Interview Questions", icon: MessageSquare },
+];
+
 const navItems = [
-  { href: "/practice", label: "Practice", icon: GraduationCap },
   { href: "/tutorials", label: "Tutorials", icon: PlayCircle },
 ];
 
@@ -74,11 +81,17 @@ export function Sidebar() {
   const [communityOpen, setCommunityOpen] = useState(
     pathname.startsWith("/community"),
   );
+  const [practiceOpen, setPracticeOpen] = useState(
+    pathname.startsWith("/practice"),
+  );
 
   return (
     <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-3 py-4">
-      <Link href="/dashboard" className="mb-6 px-3">
-        <span className="text-lg font-bold text-primary">crackitt</span>
+      <Link href="/dashboard" className="mb-6 px-3 flex items-center gap-2">
+        <Flame
+          className="h-4 w-4 text-primary"
+        />
+        <span className="text-lg font-bold text-primary">CrackItt</span>
       </Link>
 
       <nav className="flex flex-1 flex-col gap-1">
@@ -168,6 +181,46 @@ export function Sidebar() {
           )}
         </div>
 
+        <div>
+          <Button
+            variant={pathname.startsWith("/practice") ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-3",
+              pathname.startsWith("/practice") &&
+                "bg-primary/10 text-primary hover:bg-primary/15",
+            )}
+            onClick={() => setPracticeOpen(!practiceOpen)}
+          >
+            <GraduationCap className="h-4 w-4" />
+            <span className="flex-1 text-left">Practice</span>
+            {practiceOpen ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+          {practiceOpen && (
+            <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
+              {practiceItems.map((item) => (
+                <Button
+                  key={item.href}
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "justify-start gap-2 px-2",
+                    pathname.startsWith(item.href) &&
+                      "font-medium text-primary hover:text-primary",
+                  )}
+                  render={<Link href={item.href} />}
+                >
+                  <item.icon className="h-3.5 w-3.5" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {navItems.map((item) => (
           <NavLink
             key={item.href}
@@ -189,7 +242,7 @@ export function Sidebar() {
             width={32}
             height={32}
           />
-          <span className="text-sm font-medium">Aryan Bola</span>
+          <span className="text-sm font-medium"> By Aryan Bola</span>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <a

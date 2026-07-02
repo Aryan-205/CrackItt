@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { slugify, type UserBlogDraft } from "@/lib/community-data";
+import { type UserBlogDraft } from "@/lib/community-data";
 import { cn } from "@/lib/utils";
 
 const BOOKMARKS_KEY = "crackitt-blog-bookmarks";
@@ -61,18 +61,10 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string>("All");
-  const [showCompose, setShowCompose] = useState(false);
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => loadBookmarks());
   const [userBlogs, setUserBlogs] = useState<UserBlogDraft[]>(() =>
     loadUserBlogs(),
   );
-  const [draft, setDraft] = useState({
-    title: "",
-    excerpt: "",
-    content: "",
-    tag: "",
-    author: "You",
-  });
 
   const allPosts: BlogItem[] = useMemo(
     () => [
@@ -118,28 +110,6 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
     });
   }
 
-  function handlePublish(e: React.FormEvent) {
-    e.preventDefault();
-    if (!draft.title.trim() || !draft.content.trim()) return;
-
-    const newBlog: UserBlogDraft = {
-      id: `user-${Date.now()}`,
-      title: draft.title.trim(),
-      excerpt: draft.excerpt.trim() || draft.content.trim().slice(0, 120),
-      content: draft.content.trim(),
-      author: draft.author.trim() || "You",
-      tag: draft.tag.trim() || "Community",
-      slug: slugify(draft.title),
-      publishedAt: new Date().toISOString(),
-    };
-
-    const updated = [newBlog, ...userBlogs];
-    setUserBlogs(updated);
-    saveUserBlogs(updated);
-    setDraft({ title: "", excerpt: "", content: "", tag: "", author: "You" });
-    setShowCompose(false);
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -149,7 +119,7 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
             Read, write, and bookmark community blogs.
           </p>
         </div>
-        <Button onClick={() => setShowCompose(!showCompose)}>
+        <Button render={<Link href="/community/blog/create" />}>
           <PenLine className="h-4 w-4" />
           Write a blog
         </Button>
@@ -217,59 +187,6 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {showCompose && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Publish a new blog</CardTitle>
-            <CardDescription>
-              Share your interview prep insights with the community.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePublish} className="flex flex-col gap-3">
-              <Input
-                placeholder="Title"
-                value={draft.title}
-                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                required
-              />
-              <Input
-                placeholder="Tag (e.g. System Design, Frontend)"
-                value={draft.tag}
-                onChange={(e) => setDraft({ ...draft, tag: e.target.value })}
-              />
-              <Input
-                placeholder="Short excerpt"
-                value={draft.excerpt}
-                onChange={(e) =>
-                  setDraft({ ...draft, excerpt: e.target.value })
-                }
-              />
-              <textarea
-                placeholder="Write your blog content..."
-                value={draft.content}
-                onChange={(e) =>
-                  setDraft({ ...draft, content: e.target.value })
-                }
-                required
-                rows={6}
-                className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-              <div className="flex gap-2">
-                <Button type="submit">Publish</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCompose(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
           </CardContent>
         </Card>
       )}
