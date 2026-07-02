@@ -4,6 +4,7 @@ import type { BlogPost } from "@repo/types";
 import {
   Bookmark,
   BookmarkCheck,
+  Filter,
   PenLine,
   Search,
 } from "lucide-react";
@@ -58,6 +59,8 @@ type BlogItem = BlogPost & { isUserSubmitted?: boolean };
 export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
   const [search, setSearch] = useState("");
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedTag, setSelectedTag] = useState<string>("All");
   const [showCompose, setShowCompose] = useState(false);
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => loadBookmarks());
   const [userBlogs, setUserBlogs] = useState<UserBlogDraft[]>(() =>
@@ -79,10 +82,18 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
     [initialPosts, userBlogs],
   );
 
+  const availableTags = useMemo(
+    () => ["All", ...Array.from(new Set(allPosts.map((p) => p.tag))).sort()],
+    [allPosts],
+  );
+
   const filtered = useMemo(() => {
     let posts = allPosts;
     if (showBookmarks) {
       posts = posts.filter((p) => bookmarks.has(p.id));
+    }
+    if (selectedTag !== "All") {
+      posts = posts.filter((p) => p.tag === selectedTag);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -95,7 +106,7 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
       );
     }
     return posts;
-  }, [allPosts, bookmarks, search, showBookmarks]);
+  }, [allPosts, bookmarks, search, selectedTag, showBookmarks]);
 
   function toggleBookmark(id: string) {
     setBookmarks((prev) => {
@@ -151,21 +162,64 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
             placeholder="Search blogs by title, author, or tag..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
+            className="pl-8 w-full"
           />
         </div>
         <Button
-          variant={showBookmarks ? "secondary" : "outline"}
-          onClick={() => setShowBookmarks(!showBookmarks)}
+          type="button"
+          variant={showFilters ? "secondary" : "outline"}
+          onClick={() => setShowFilters((prev) => !prev)}
         >
-          {showBookmarks ? (
-            <BookmarkCheck className="h-4 w-4" />
-          ) : (
-            <Bookmark className="h-4 w-4" />
-          )}
-          {showBookmarks ? "Bookmarked" : "All blogs"}
+          <Filter className="h-4 w-4" />
+          Filters
         </Button>
       </div>
+
+      {showFilters && (
+        <Card>
+          <CardContent className="flex flex-col gap-4 pt-6">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Filter by tag
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <Button
+                    key={tag}
+                    type="button"
+                    size="sm"
+                    variant={selectedTag === tag ? "default" : "outline"}
+                    onClick={() => setSelectedTag(tag)}
+                  >
+                    {tag}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Extra filters
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={showBookmarks ? "default" : "outline"}
+                  onClick={() => setShowBookmarks((prev) => !prev)}
+                >
+                  {showBookmarks ? (
+                    <BookmarkCheck className="h-4 w-4" />
+                  ) : (
+                    <Bookmark className="h-4 w-4" />
+                  )}
+                  {showBookmarks ? "Bookmarked only" : "Include all blogs"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {showCompose && (
         <Card>
@@ -254,16 +308,16 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     className={cn(
                       bookmarks.has(post.id) && "text-primary",
                     )}
                     onClick={() => toggleBookmark(post.id)}
                   >
                     {bookmarks.has(post.id) ? (
-                      <BookmarkCheck className="h-4 w-4" />
+                      <Bookmark fill="currentColor" className="h-6 w-6" />
                     ) : (
-                      <Bookmark className="h-4 w-4" />
+                      <Bookmark className="h-6 w-6" />
                     )}
                   </Button>
                 </div>

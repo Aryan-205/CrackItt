@@ -55,7 +55,7 @@ export function RightPanel({
   feed: DashboardFeedItem[];
 }) {
   return (
-    <aside className="flex w-84 shrink-0 flex-col gap-4 border-l border-border bg-card p-4">
+    <aside className="sticky top-0 flex h-screen w-84 shrink-0 flex-col gap-4 overflow-y-auto border-l border-border bg-card p-4">
       <Card>
         <CardContent className="flex items-center gap-3">
           <Avatar className="h-10 w-10">

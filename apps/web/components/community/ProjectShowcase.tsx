@@ -5,9 +5,8 @@ import {
   INITIAL_COMMUNITY_PROJECTS,
   type CommunityProject,
 } from "@/lib/community-data";
-import { ExternalLink, Github, Plus, Star } from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Filter, Github, Plus, Search, Star } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -116,6 +115,12 @@ export function ProjectShowcase() {
     loadProjectRatings(),
   );
   const [showSubmit, setShowSubmit] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] = useState("");
+  const [activeTag, setActiveTag] = useState<string>("All");
+  const [sortBy, setSortBy] = useState<
+    "latest" | "oldest" | "upvotes-desc" | "upvotes-asc"
+  >("upvotes-desc");
   const [draft, setDraft] = useState({
     title: "",
     description: "",
@@ -202,7 +207,49 @@ export function ProjectShowcase() {
     setShowSubmit(false);
   }
 
-  const sorted = [...projects].sort((a, b) => b.upvotes - a.upvotes);
+  const filterTags = useMemo(
+    () =>
+      ["All", ...Array.from(new Set(projects.flatMap((project) => project.tags))).sort()],
+    [projects],
+  );
+
+  const filtered = useMemo(() => {
+    let list = projects;
+
+    if (activeTag !== "All") {
+      list = list.filter((project) => project.tags.includes(activeTag));
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (project) =>
+          project.title.toLowerCase().includes(q) ||
+          project.description.toLowerCase().includes(q) ||
+          project.author.toLowerCase().includes(q) ||
+          project.tags.some((tag) => tag.toLowerCase().includes(q)),
+      );
+    }
+
+    const sorted = [...list];
+    if (sortBy === "latest") {
+      sorted.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    } else if (sortBy === "oldest") {
+      sorted.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    } else if (sortBy === "upvotes-asc") {
+      sorted.sort((a, b) => a.upvotes - b.upvotes);
+    } else {
+      sorted.sort((a, b) => b.upvotes - a.upvotes);
+    }
+
+    return sorted;
+  }, [activeTag, projects, search, sortBy]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -279,10 +326,95 @@ export function ProjectShowcase() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {sorted.map((project) => (
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search projects by title, author, description, or tags..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <Button
+          type="button"
+          variant={showFilters ? "secondary" : "outline"}
+          onClick={() => setShowFilters((prev) => !prev)}
+        >
+          <Filter className="h-4 w-4" />
+          Filters
+        </Button>
+      </div>
+
+      {showFilters && (
+        <Card>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Filter by tag
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {filterTags.map((tag) => (
+                  <Button
+                    key={tag}
+                    type="button"
+                    size="sm"
+                    variant={activeTag === tag ? "default" : "outline"}
+                    onClick={() => setActiveTag(tag)}
+                  >
+                    {tag}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Sort
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "latest" ? "default" : "outline"}
+                  onClick={() => setSortBy("latest")}
+                >
+                  Latest
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "oldest" ? "default" : "outline"}
+                  onClick={() => setSortBy("oldest")}
+                >
+                  Oldest
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "upvotes-desc" ? "default" : "outline"}
+                  onClick={() => setSortBy("upvotes-desc")}
+                >
+                  Upvotes Desc
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "upvotes-asc" ? "default" : "outline"}
+                  onClick={() => setSortBy("upvotes-asc")}
+                >
+                  Upvotes Asc
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex flex-col gap-3">
+        {filtered.map((project) => (
           <Card key={project.id} className="transition-shadow hover:shadow-md">
-            <CardContent className="flex gap-4 pt-6">
+            <CardContent className="flex gap-4 ">
               <VoteControls
                 score={project.upvotes}
                 userVote={votes[project.id] ?? null}
@@ -303,13 +435,6 @@ export function ProjectShowcase() {
                 <CardDescription className="line-clamp-3">
                   {project.description}
                 </CardDescription>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {project.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-[10px]">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
                 <div className="mt-3 flex flex-wrap items-center gap-4">
                   <StarRating
                     value={averageRating(project)}
@@ -346,6 +471,13 @@ export function ProjectShowcase() {
           </Card>
         ))}
       </div>
+      {filtered.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            No projects match your current search/filter.
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

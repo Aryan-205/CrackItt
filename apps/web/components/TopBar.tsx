@@ -1,4 +1,4 @@
-import { GraduationCap, Search } from "lucide-react";
+import { GraduationCap, PhoneCall, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,14 +25,10 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" render={<Link href="#" />}>
-          Pricing
+        <Button variant="outline" size="sm" render={<Link href="https://cal.com/aryan-bola/15min" />}>
+          <PhoneCall className="h-4 w-4" />
+          Book a one-on-one call
         </Button>
-        <Button variant="outline" size="sm">
-          <GraduationCap className="h-4 w-4" />
-          Tutor
-        </Button>
-        <Button size="sm">Get Premium</Button>
         <ThemeToggle />
       </div>
     </header>

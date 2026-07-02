@@ -7,7 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Circle,
-  Lock,
+  Check
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function LearnSidebar() {
   }
 
   return (
-    <aside className="flex w-84 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
+    <aside className="sticky top-0 flex h-screen w-84 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
       <div className="border-b border-border px-5 py-4">
         <p className="text-xs font-semibold tracking-widest text-muted-foreground">
           LEARN {curriculum.title.toUpperCase()}
@@ -109,21 +109,9 @@ export function LearnSidebar() {
                               : "text-foreground hover:bg-muted",
                         )}
                       >
-                        {lesson.completed ? (
-                          <CheckCircle2
-                            className={cn(
-                              "h-4 w-4 shrink-0",
-                              isActive
-                                ? "text-primary"
-                                : "text-muted-foreground/60",
-                            )}
-                          />
-                        ) : (
-                          <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
-                        )}
                         <span className="flex-1 truncate">{lesson.title}</span>
-                        {lesson.locked && (
-                          <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                        {lesson.completed && (
+                          <Check className="h-4 w-4 shrink-0 text-primary" />
                         )}
                       </Link>
                     );

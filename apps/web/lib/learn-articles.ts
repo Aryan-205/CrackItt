@@ -9,6 +9,7 @@ import {
 export type LearnArticle = {
   slug: string;
   title: string;
+  authorName: string;
   categorySlug: CategorySlug;
   categoryTitle: string;
   sectionTitle: string;
@@ -170,6 +171,7 @@ export function getLearnArticle(
   return {
     slug: lesson.id,
     title: lesson.title,
+    authorName: "Crackitt Editorial Team",
     categorySlug: curriculum.categorySlug,
     categoryTitle: curriculum.title,
     sectionTitle: section.title,

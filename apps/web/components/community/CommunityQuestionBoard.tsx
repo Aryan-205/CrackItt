@@ -5,7 +5,7 @@ import {
   type CommunityAnswer,
   type CommunityQuestion,
 } from "@/lib/community-data";
-import { MessageSquare, Plus } from "lucide-react";
+import { Filter, MessageSquare, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,16 +17,32 @@ import { cn } from "@/lib/utils";
 
 const QUESTIONS_KEY = "crackitt-community-questions";
 const VOTES_KEY = "crackitt-question-votes";
+const PRESET_TAGS = [
+  "Frontend",
+  "Backend",
+  "System Design",
+  "Full Stack",
+  "Behavioral",
+] as const;
 
 type StoredVotes = Record<string, VoteDirection>;
+type LegacyQuestion = Omit<CommunityQuestion, "tags"> & { tag?: string };
 
 function loadQuestions(): CommunityQuestion[] {
   if (typeof window === "undefined") return INITIAL_COMMUNITY_QUESTIONS;
   try {
     const raw = localStorage.getItem(QUESTIONS_KEY);
-    return raw
-      ? (JSON.parse(raw) as CommunityQuestion[])
-      : INITIAL_COMMUNITY_QUESTIONS;
+    if (!raw) return INITIAL_COMMUNITY_QUESTIONS;
+    const parsed = JSON.parse(raw) as Array<CommunityQuestion | LegacyQuestion>;
+    return parsed.map((q) => ({
+      ...q,
+      tags:
+        "tags" in q && Array.isArray(q.tags)
+          ? q.tags
+          : "tag" in q && q.tag
+            ? [q.tag]
+            : ["General"],
+    }));
   } catch {
     return INITIAL_COMMUNITY_QUESTIONS;
   }
@@ -62,17 +78,69 @@ export function CommunityQuestionBoard() {
   }, []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showAskForm, setShowAskForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] = useState("");
+  const [activeFilterTag, setActiveFilterTag] = useState<string>("All");
+  const [sortBy, setSortBy] = useState<
+    "latest" | "oldest" | "upvotes-desc" | "upvotes-asc"
+  >("latest");
   const [answerText, setAnswerText] = useState("");
   const [newQuestion, setNewQuestion] = useState({
     title: "",
     body: "",
-    tag: "",
   });
+  const [selectedTags, setSelectedTags] = useState<string[]>(["Frontend"]);
+  const [useCustomTag, setUseCustomTag] = useState(false);
+  const [customTag, setCustomTag] = useState("");
 
   const selected = useMemo(
     () => questions.find((q) => q.id === selectedId) ?? null,
     [questions, selectedId],
   );
+
+  const availableFilterTags = useMemo(
+    () =>
+      ["All", ...Array.from(new Set(questions.flatMap((q) => q.tags))).sort()],
+    [questions],
+  );
+
+  const filteredQuestions = useMemo(() => {
+    let list = questions;
+
+    if (activeFilterTag !== "All") {
+      list = list.filter((q) => q.tags.includes(activeFilterTag));
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (item) =>
+          item.title.toLowerCase().includes(q) ||
+          item.body.toLowerCase().includes(q) ||
+          item.author.toLowerCase().includes(q) ||
+          item.tags.some((tag) => tag.toLowerCase().includes(q)),
+      );
+    }
+
+    const sorted = [...list];
+    if (sortBy === "latest") {
+      sorted.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    } else if (sortBy === "oldest") {
+      sorted.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    } else if (sortBy === "upvotes-asc") {
+      sorted.sort((a, b) => getScore(a) - getScore(b));
+    } else {
+      sorted.sort((a, b) => getScore(b) - getScore(a));
+    }
+
+    return sorted;
+  }, [activeFilterTag, questions, search, sortBy]);
 
   function getScore(q: CommunityQuestion) {
     return q.upvotes - q.downvotes;
@@ -106,14 +174,26 @@ export function CommunityQuestionBoard() {
 
   function handleAskQuestion(e: React.FormEvent) {
     e.preventDefault();
-    if (!newQuestion.title.trim() || !newQuestion.body.trim()) return;
+    const custom = customTag.trim();
+    const resolvedTags = [
+      ...selectedTags,
+      ...(useCustomTag && custom ? [custom] : []),
+    ];
+
+    if (
+      !newQuestion.title.trim() ||
+      !newQuestion.body.trim() ||
+      resolvedTags.length === 0
+    ) {
+      return;
+    }
 
     const q: CommunityQuestion = {
       id: `cq-user-${Date.now()}`,
       title: newQuestion.title.trim(),
       body: newQuestion.body.trim(),
       author: "You",
-      tag: newQuestion.tag.trim() || "General",
+      tags: resolvedTags,
       createdAt: new Date().toISOString(),
       upvotes: 0,
       downvotes: 0,
@@ -123,9 +203,18 @@ export function CommunityQuestionBoard() {
     const updated = [q, ...questions];
     setQuestions(updated);
     saveQuestions(updated);
-    setNewQuestion({ title: "", body: "", tag: "" });
+    setNewQuestion({ title: "", body: "" });
+    setSelectedTags(["Frontend"]);
+    setUseCustomTag(false);
+    setCustomTag("");
     setShowAskForm(false);
     setSelectedId(q.id);
+  }
+
+  function togglePresetTag(tag: string) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
   }
 
   function handleSubmitAnswer(e: React.FormEvent) {
@@ -177,13 +266,38 @@ export function CommunityQuestionBoard() {
                 }
                 required
               />
-              <Input
-                placeholder="Tag (e.g. Frontend, System Design)"
-                value={newQuestion.tag}
-                onChange={(e) =>
-                  setNewQuestion({ ...newQuestion, tag: e.target.value })
-                }
-              />
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">Tag</p>
+                <div className="flex flex-wrap gap-2">
+                  {PRESET_TAGS.map((tag) => (
+                    <Button
+                      key={tag}
+                      type="button"
+                      size="sm"
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      onClick={() => togglePresetTag(tag)}
+                    >
+                      {tag}
+                    </Button>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={useCustomTag ? "default" : "outline"}
+                    onClick={() => setUseCustomTag((prev) => !prev)}
+                  >
+                    Custom
+                  </Button>
+                </div>
+              </div>
+              {useCustomTag && (
+                <Input
+                  placeholder="Enter custom tag"
+                  value={customTag}
+                  onChange={(e) => setCustomTag(e.target.value)}
+                  required
+                />
+              )}
               <textarea
                 placeholder="Describe your question in detail..."
                 value={newQuestion.body}
@@ -199,7 +313,12 @@ export function CommunityQuestionBoard() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowAskForm(false)}
+                  onClick={() => {
+                    setShowAskForm(false);
+                    setSelectedTags(["Frontend"]);
+                    setUseCustomTag(false);
+                    setCustomTag("");
+                  }}
                 >
                   Cancel
                 </Button>
@@ -209,8 +328,93 @@ export function CommunityQuestionBoard() {
         </Card>
       )}
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search questions by title, author, body, or tags..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <Button
+          type="button"
+          variant={showFilters ? "secondary" : "outline"}
+          onClick={() => setShowFilters((prev) => !prev)}
+        >
+          <Filter className="h-4 w-4" />
+          Filters
+        </Button>
+      </div>
+
+      {showFilters && (
+        <Card>
+          <CardContent className="flex flex-col gap-4 pt-6">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Filter by tags
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {availableFilterTags.map((tag) => (
+                  <Button
+                    key={tag}
+                    type="button"
+                    size="sm"
+                    variant={activeFilterTag === tag ? "default" : "outline"}
+                    onClick={() => setActiveFilterTag(tag)}
+                  >
+                    {tag}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Sort
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "latest" ? "default" : "outline"}
+                  onClick={() => setSortBy("latest")}
+                >
+                  Latest
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "oldest" ? "default" : "outline"}
+                  onClick={() => setSortBy("oldest")}
+                >
+                  Oldest
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "upvotes-desc" ? "default" : "outline"}
+                  onClick={() => setSortBy("upvotes-desc")}
+                >
+                  Upvotes Desc
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortBy === "upvotes-asc" ? "default" : "outline"}
+                  onClick={() => setSortBy("upvotes-asc")}
+                >
+                  Upvotes Asc
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex flex-col gap-2">
-        {questions.map((q) => (
+        {filteredQuestions.map((q) => (
           <Card
             key={q.id}
             className={cn(
@@ -229,7 +433,11 @@ export function CommunityQuestionBoard() {
               />
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">{q.tag}</Badge>
+                  {q.tags.map((tag) => (
+                    <Badge key={`${q.id}-${tag}`} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
                   <span className="text-xs text-muted-foreground">
                     {q.author} ·{" "}
                     {new Date(q.createdAt).toLocaleDateString("en-US", {
@@ -251,6 +459,13 @@ export function CommunityQuestionBoard() {
             </CardContent>
           </Card>
         ))}
+        {filteredQuestions.length === 0 && (
+          <Card>
+            <CardContent className="py-10 text-center text-muted-foreground">
+              No questions match your current search/filter.
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <SlideOverPanel
@@ -262,7 +477,11 @@ export function CommunityQuestionBoard() {
           <div className="flex flex-col gap-6">
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary">{selected.tag}</Badge>
+                {selected.tags.map((tag) => (
+                  <Badge key={`${selected.id}-${tag}`} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
                 <span className="text-xs text-muted-foreground">
                   Asked by {selected.author} ·{" "}
                   {new Date(selected.createdAt).toLocaleDateString("en-US", {

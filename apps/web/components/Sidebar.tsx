@@ -7,18 +7,21 @@ import {
   ChevronDown,
   ChevronRight,
   FolderKanban,
+  Github,
   GraduationCap,
   HelpCircle,
   Home,
-  MessageSquare,
+  Mail,
   Newspaper,
   PlayCircle,
+  Twitter,
   Users,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const learnItems = [
   { href: "/learn/system-design", label: "System Design" },
@@ -73,7 +76,7 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-3 py-4">
+    <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-3 py-4">
       <Link href="/dashboard" className="mb-6 px-3">
         <span className="text-lg font-bold text-primary">crackitt</span>
       </Link>
@@ -127,9 +130,7 @@ export function Sidebar() {
 
         <div>
           <Button
-            variant={
-              pathname.startsWith("/community") ? "secondary" : "ghost"
-            }
+            variant={pathname.startsWith("/community") ? "secondary" : "ghost"}
             className={cn(
               "w-full justify-start gap-3",
               pathname.startsWith("/community") &&
@@ -179,9 +180,47 @@ export function Sidebar() {
       </nav>
 
       <Separator className="mt-auto" />
-      <div className="flex items-center gap-2 px-3 pt-4 text-xs text-muted-foreground">
-        <MessageSquare className="h-3.5 w-3.5" />
-        <span>Community Member</span>
+      <div className="px-3 pt-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/images/aryan-bola.jpg"
+            alt="Aryan Bola"
+            className="size-8 rounded-full border"
+            width={32}
+            height={32}
+          />
+          <span className="text-sm font-medium">Aryan Bola</span>
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <a
+            href="mailto:aryan@example.com"
+            className="inline-flex items-center gap-1 hover:text-primary"
+            aria-label="Email Aryan"
+          >
+            <Mail className="h-3.5 w-3.5" />
+            Email
+          </a>
+          <a
+            href="https://x.com/aryan"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 hover:text-primary"
+            aria-label="Aryan on X"
+          >
+            <Twitter className="h-3.5 w-3.5" />
+            X
+          </a>
+          <a
+            href="https://github.com/aryan"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 hover:text-primary"
+            aria-label="Aryan on GitHub"
+          >
+            <Github className="h-3.5 w-3.5" />
+            GitHub
+          </a>
+        </div>
       </div>
     </aside>
   );

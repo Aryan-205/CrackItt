@@ -25,7 +25,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center bg-gradient-to-b from-primary/10 via-accent/30 to-background px-6 py-20 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center bg-linear-to-b from-primary/10 via-accent/30 to-background px-6 py-20 text-center">
         <div className="max-w-3xl">
           <Badge className="mb-4">Free for a limited time</Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">

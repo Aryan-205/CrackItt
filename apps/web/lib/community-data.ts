@@ -11,7 +11,7 @@ export interface CommunityQuestion {
   title: string;
   body: string;
   author: string;
-  tag: string;
+  tags: string[];
   createdAt: string;
   upvotes: number;
   downvotes: number;
@@ -49,7 +49,7 @@ export const INITIAL_COMMUNITY_QUESTIONS: CommunityQuestion[] = [
     title: "How do you prepare for system design interviews in 2 weeks?",
     body: "I have a Google onsite coming up and only two weeks left. What's the most efficient way to cover the essentials — caching, load balancing, databases — without getting overwhelmed?",
     author: "Priya K.",
-    tag: "System Design",
+    tags: ["System Design"],
     createdAt: "2026-06-28T10:00:00Z",
     upvotes: 42,
     downvotes: 3,
@@ -77,7 +77,7 @@ export const INITIAL_COMMUNITY_QUESTIONS: CommunityQuestion[] = [
     title: "Best way to explain React reconciliation to an interviewer?",
     body: "I understand the concept but struggle to explain it clearly under pressure. Any frameworks or analogies that have worked for you?",
     author: "Sam R.",
-    tag: "Frontend",
+    tags: ["Frontend"],
     createdAt: "2026-06-27T08:00:00Z",
     upvotes: 28,
     downvotes: 1,
@@ -97,7 +97,7 @@ export const INITIAL_COMMUNITY_QUESTIONS: CommunityQuestion[] = [
     title: "Should I mention my side projects in behavioral rounds?",
     body: "I built a real-time collaboration tool with 200 users. Is that worth bringing up for 'tell me about a challenging project' questions, or does it seem too small?",
     author: "Chris W.",
-    tag: "Behavioral",
+    tags: ["Behavioral"],
     createdAt: "2026-06-26T16:45:00Z",
     upvotes: 15,
     downvotes: 0,
@@ -108,7 +108,7 @@ export const INITIAL_COMMUNITY_QUESTIONS: CommunityQuestion[] = [
     title: "How to handle 'design a payment system' with no fintech background?",
     body: "Got this question in a mock interview and froze. What are the minimum concepts I need to know about idempotency, double-charging, and PCI compliance?",
     author: "Taylor N.",
-    tag: "System Design",
+    tags: ["System Design"],
     createdAt: "2026-06-25T11:20:00Z",
     upvotes: 37,
     downvotes: 2,
@@ -128,7 +128,7 @@ export const INITIAL_COMMUNITY_QUESTIONS: CommunityQuestion[] = [
     title: "GraphQL vs REST — what do backend interviewers actually want to hear?",
     body: "Every guide says 'it depends' but I need a concrete answer structure. How do you frame the trade-offs without sounding like you're reading a blog post?",
     author: "Jamie H.",
-    tag: "Backend",
+    tags: ["Backend"],
     createdAt: "2026-06-24T09:30:00Z",
     upvotes: 21,
     downvotes: 4,
