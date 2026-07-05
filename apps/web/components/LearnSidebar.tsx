@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Circle,
   Check
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -19,7 +17,7 @@ import {
 import { getLearnCurriculum } from "@/lib/learn-data";
 import { cn } from "@/lib/utils";
 
-export function LearnSidebar() {
+export function LearnSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const category = segments[1] ?? "";
@@ -55,14 +53,14 @@ export function LearnSidebar() {
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-84 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
-      <div className="border-b border-border px-5 py-4">
+    <aside className={cn("flex h-full w-full flex-col overflow-y-auto bg-card", className)}>
+      <div className="border-b border-border px-5 py-4 shrink-0">
         <p className="text-xs font-semibold tracking-widest text-muted-foreground">
           LEARN {curriculum.title.toUpperCase()}
         </p>
       </div>
 
-      <nav className="flex flex-col gap-1 p-3">
+      <nav className="flex-1 overflow-y-auto flex flex-col gap-1 p-3">
         {curriculum.sections.map((section) => {
           const isOpen = openSections[section.id] ?? false;
           const Icon = section.icon;
@@ -82,11 +80,11 @@ export function LearnSidebar() {
                 }
               >
                 <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="flex-1 text-left text-sm">{section.title}</span>
+                <span className="flex-1 text-left text-sm truncate">{section.title}</span>
                 {isOpen ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 )}
               </CollapsibleTrigger>
 
@@ -111,7 +109,7 @@ export function LearnSidebar() {
                       >
                         <span className="flex-1 truncate">{lesson.title}</span>
                         {lesson.completed && (
-                          <Check className="h-4 w-4 shrink-0 text-primary" />
+                          <Check className="h-4 w-4 shrink-0 text-primary animate-in zoom-in duration-200" />
                         )}
                       </Link>
                     );

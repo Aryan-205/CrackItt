@@ -54,11 +54,13 @@ function NavLink({
   label,
   icon: Icon,
   active,
+  onClick,
 }: {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   active: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Button
@@ -67,7 +69,8 @@ function NavLink({
         "w-full justify-start gap-3",
         active && "bg-primary/10 text-primary hover:bg-primary/15",
       )}
-      render={<Link href={href} />}
+      render={<Link href={href} onClick={onClick} />}
+      onClick={onClick}
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -75,7 +78,7 @@ function NavLink({
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
   const [learnOpen, setLearnOpen] = useState(pathname.startsWith("/learn"));
   const [communityOpen, setCommunityOpen] = useState(
@@ -86,11 +89,13 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-3 py-4">
-      <Link href="/dashboard" className="mb-6 px-3 flex items-center gap-2">
-        <Flame
-          className="h-4 w-4 text-primary"
-        />
+    <aside className="flex h-full w-full flex-col overflow-y-auto bg-sidebar px-3 py-4">
+      <Link
+        href="/dashboard"
+        className="mb-6 px-3 flex items-center gap-2"
+        onClick={onNavClick}
+      >
+        <Flame className="h-4 w-4 text-primary" />
         <span className="text-lg font-bold text-primary">CrackItt</span>
       </Link>
 
@@ -100,6 +105,7 @@ export function Sidebar() {
           label="Your Dashboard"
           icon={Home}
           active={pathname === "/dashboard"}
+          onClick={onNavClick}
         />
 
         <div>
@@ -132,7 +138,8 @@ export function Sidebar() {
                     pathname === item.href &&
                       "font-medium text-primary hover:text-primary",
                   )}
-                  render={<Link href={item.href} />}
+                  render={<Link href={item.href} onClick={onNavClick} />}
+                  onClick={onNavClick}
                 >
                   {item.label}
                 </Button>
@@ -171,7 +178,8 @@ export function Sidebar() {
                     pathname.startsWith(item.href) &&
                       "font-medium text-primary hover:text-primary",
                   )}
-                  render={<Link href={item.href} />}
+                  render={<Link href={item.href} onClick={onNavClick} />}
+                  onClick={onNavClick}
                 >
                   <item.icon className="h-3.5 w-3.5" />
                   {item.label}
@@ -211,7 +219,8 @@ export function Sidebar() {
                     pathname.startsWith(item.href) &&
                       "font-medium text-primary hover:text-primary",
                   )}
-                  render={<Link href={item.href} />}
+                  render={<Link href={item.href} onClick={onNavClick} />}
+                  onClick={onNavClick}
                 >
                   <item.icon className="h-3.5 w-3.5" />
                   {item.label}
@@ -228,6 +237,7 @@ export function Sidebar() {
             label={item.label}
             icon={item.icon}
             active={pathname.startsWith(item.href)}
+            onClick={onNavClick}
           />
         ))}
       </nav>
@@ -247,7 +257,7 @@ export function Sidebar() {
         <div className="mt-3 flex items-center gap-3">
           <a
             href="mailto:aryan@example.com"
-            className="inline-flex items-center gap-1 hover:text-primary"
+            className="inline-flex items-center gap-1 hover:text-primary transition-colors"
             aria-label="Email Aryan"
           >
             <Mail className="h-3.5 w-3.5" />
@@ -257,7 +267,7 @@ export function Sidebar() {
             href="https://x.com/aryan"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 hover:text-primary"
+            className="inline-flex items-center gap-1 hover:text-primary transition-colors"
             aria-label="Aryan on X"
           >
             <Twitter className="h-3.5 w-3.5" />
@@ -267,7 +277,7 @@ export function Sidebar() {
             href="https://github.com/aryan"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 hover:text-primary"
+            className="inline-flex items-center gap-1 hover:text-primary transition-colors"
             aria-label="Aryan on GitHub"
           >
             <Github className="h-3.5 w-3.5" />

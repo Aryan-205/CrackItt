@@ -1,4 +1,5 @@
 import { LearnArticleView } from "@/components/LearnArticleView";
+import { MobileLearnNav } from "@/components/MobileLearnNav";
 import { getLearnArticle, getUserCompletions } from "@/lib/api";
 import { DEMO_USER_ID } from "@/lib/demo-user";
 import { notFound } from "next/navigation";
@@ -31,5 +32,10 @@ export default async function LearnArticlePage({
     (c) => c.itemId === `la-${category}-${slug}` && c.itemType === "learn_article"
   );
 
-  return <LearnArticleView article={article} initialCompleted={initialCompleted} />;
+  return (
+    <>
+      <LearnArticleView article={article} initialCompleted={initialCompleted} />
+      <MobileLearnNav />
+    </>
+  );
 }
