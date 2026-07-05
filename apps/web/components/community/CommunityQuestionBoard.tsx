@@ -1,22 +1,23 @@
 "use client";
 
-import {
-  INITIAL_COMMUNITY_QUESTIONS,
-  type CommunityAnswer,
-  type CommunityQuestion,
-} from "@/lib/community-data";
-import { Filter, MessageSquare, Plus, Search } from "lucide-react";
+import { type CommunityQuestion, type CommunityAnswer } from "@repo/types";
+import { Filter, MessageSquare, Plus, Search, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SlideOverPanel } from "./SlideOverPanel";
-import { VoteControls, type VoteDirection } from "./VoteControls";
+import { VoteControls } from "./VoteControls";
 import { cn } from "@/lib/utils";
+import {
+  getCommunityQuestions,
+  createCommunityQuestion,
+  voteCommunityQuestion,
+  submitCommunityAnswer,
+} from "@/lib/api";
 
-const QUESTIONS_KEY = "crackitt-community-questions";
-const VOTES_KEY = "crackitt-question-votes";
+const DEMO_USER_ID = "demo-user";
 const PRESET_TAGS = [
   "Frontend",
   "Backend",
@@ -25,57 +26,9 @@ const PRESET_TAGS = [
   "Behavioral",
 ] as const;
 
-type StoredVotes = Record<string, VoteDirection>;
-type LegacyQuestion = Omit<CommunityQuestion, "tags"> & { tag?: string };
-
-function loadQuestions(): CommunityQuestion[] {
-  if (typeof window === "undefined") return INITIAL_COMMUNITY_QUESTIONS;
-  try {
-    const raw = localStorage.getItem(QUESTIONS_KEY);
-    if (!raw) return INITIAL_COMMUNITY_QUESTIONS;
-    const parsed = JSON.parse(raw) as Array<CommunityQuestion | LegacyQuestion>;
-    return parsed.map((q) => ({
-      ...q,
-      tags:
-        "tags" in q && Array.isArray(q.tags)
-          ? q.tags
-          : "tag" in q && q.tag
-            ? [q.tag]
-            : ["General"],
-    }));
-  } catch {
-    return INITIAL_COMMUNITY_QUESTIONS;
-  }
-}
-
-function saveQuestions(questions: CommunityQuestion[]) {
-  localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questions));
-}
-
-function loadVotes(): StoredVotes {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(VOTES_KEY);
-    return raw ? (JSON.parse(raw) as StoredVotes) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveVotes(votes: StoredVotes) {
-  localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
-}
-
 export function CommunityQuestionBoard() {
-  const [questions, setQuestions] = useState<CommunityQuestion[]>(
-    INITIAL_COMMUNITY_QUESTIONS,
-  );
-  const [votes, setVotes] = useState<StoredVotes>({});
-
-  useEffect(() => {
-    setQuestions(loadQuestions());
-    setVotes(loadVotes());
-  }, []);
+  const [questions, setQuestions] = useState<CommunityQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showAskForm, setShowAskForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -92,6 +45,18 @@ export function CommunityQuestionBoard() {
   const [selectedTags, setSelectedTags] = useState<string[]>(["Frontend"]);
   const [useCustomTag, setUseCustomTag] = useState(false);
   const [customTag, setCustomTag] = useState("");
+
+  useEffect(() => {
+    getCommunityQuestions(DEMO_USER_ID)
+      .then((data) => {
+        setQuestions(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading forum questions: ", err);
+        setLoading(false);
+      });
+  }, []);
 
   const selected = useMemo(
     () => questions.find((q) => q.id === selectedId) ?? null,
@@ -147,29 +112,19 @@ export function CommunityQuestionBoard() {
   }
 
   function handleVote(questionId: string, direction: "up" | "down") {
-    const current = votes[questionId] ?? null;
-    const nextVote: VoteDirection = current === direction ? null : direction;
+    const q = questions.find((item) => item.id === questionId);
+    if (!q) return;
 
-    setQuestions((prev) => {
-      const updated = prev.map((q) => {
-        if (q.id !== questionId) return q;
-        let up = q.upvotes;
-        let down = q.downvotes;
-        if (current === "up") up--;
-        if (current === "down") down--;
-        if (nextVote === "up") up++;
-        if (nextVote === "down") down++;
-        return { ...q, upvotes: up, downvotes: down };
-      });
-      saveQuestions(updated);
-      return updated;
-    });
+    const current = q.userVote;
+    const nextVote = current === direction ? null : direction;
 
-    setVotes((prev) => {
-      const next = { ...prev, [questionId]: nextVote };
-      saveVotes(next);
-      return next;
-    });
+    voteCommunityQuestion(questionId, nextVote, DEMO_USER_ID)
+      .then((updated) => {
+        setQuestions((prev) =>
+          prev.map((item) => (item.id === questionId ? updated : item))
+        );
+      })
+      .catch((err) => console.error("Error voting: ", err));
   }
 
   function handleAskQuestion(e: React.FormEvent) {
@@ -188,32 +143,27 @@ export function CommunityQuestionBoard() {
       return;
     }
 
-    const q: CommunityQuestion = {
-      id: `cq-user-${Date.now()}`,
+    createCommunityQuestion({
       title: newQuestion.title.trim(),
       body: newQuestion.body.trim(),
-      author: "You",
       tags: resolvedTags,
-      createdAt: new Date().toISOString(),
-      upvotes: 0,
-      downvotes: 0,
-      answers: [],
-    };
-
-    const updated = [q, ...questions];
-    setQuestions(updated);
-    saveQuestions(updated);
-    setNewQuestion({ title: "", body: "" });
-    setSelectedTags(["Frontend"]);
-    setUseCustomTag(false);
-    setCustomTag("");
-    setShowAskForm(false);
-    setSelectedId(q.id);
+      author: "Aryan",
+    })
+      .then((created) => {
+        setQuestions((prev) => [created, ...prev]);
+        setNewQuestion({ title: "", body: "" });
+        setSelectedTags(["Frontend"]);
+        setUseCustomTag(false);
+        setCustomTag("");
+        setShowAskForm(false);
+        setSelectedId(created.id);
+      })
+      .catch((err) => console.error("Error creating question: ", err));
   }
 
   function togglePresetTag(tag: string) {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   }
 
@@ -221,22 +171,14 @@ export function CommunityQuestionBoard() {
     e.preventDefault();
     if (!selected || !answerText.trim()) return;
 
-    const answer: CommunityAnswer = {
-      id: `ca-user-${Date.now()}`,
-      author: "You",
-      content: answerText.trim(),
-      createdAt: new Date().toISOString(),
-      upvotes: 0,
-    };
-
-    const updated = questions.map((q) =>
-      q.id === selected.id
-        ? { ...q, answers: [...q.answers, answer] }
-        : q,
-    );
-    setQuestions(updated);
-    saveQuestions(updated);
-    setAnswerText("");
+    submitCommunityAnswer(selected.id, answerText.trim(), "Aryan")
+      .then((updated) => {
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === selected.id ? updated : q))
+        );
+        setAnswerText("");
+      })
+      .catch((err) => console.error("Error submitting answer: ", err));
   }
 
   return (
@@ -248,15 +190,18 @@ export function CommunityQuestionBoard() {
             Ask the community and upvote the best answers.
           </p>
         </div>
-        <Button onClick={() => setShowAskForm(!showAskForm)}>
+        <Button
+          onClick={() => setShowAskForm(!showAskForm)}
+          className="active:scale-[0.97] transition-all"
+        >
           <Plus className="h-4 w-4" />
           Ask a question
         </Button>
       </div>
 
       {showAskForm && (
-        <Card>
-          <CardContent>
+        <Card className="animate-in fade-in duration-200">
+          <CardContent className="pt-6">
             <form onSubmit={handleAskQuestion} className="flex flex-col gap-3">
               <Input
                 placeholder="Question title"
@@ -265,6 +210,7 @@ export function CommunityQuestionBoard() {
                   setNewQuestion({ ...newQuestion, title: e.target.value })
                 }
                 required
+                className="focus-visible:ring-primary/20"
               />
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium">Tag</p>
@@ -276,6 +222,7 @@ export function CommunityQuestionBoard() {
                       size="sm"
                       variant={selectedTags.includes(tag) ? "default" : "outline"}
                       onClick={() => togglePresetTag(tag)}
+                      className="active:scale-[0.95] transition-transform duration-100"
                     >
                       {tag}
                     </Button>
@@ -285,6 +232,7 @@ export function CommunityQuestionBoard() {
                     size="sm"
                     variant={useCustomTag ? "default" : "outline"}
                     onClick={() => setUseCustomTag((prev) => !prev)}
+                    className="active:scale-[0.95] transition-transform duration-100"
                   >
                     Custom
                   </Button>
@@ -296,6 +244,7 @@ export function CommunityQuestionBoard() {
                   value={customTag}
                   onChange={(e) => setCustomTag(e.target.value)}
                   required
+                  className="focus-visible:ring-primary/20"
                 />
               )}
               <textarea
@@ -306,10 +255,10 @@ export function CommunityQuestionBoard() {
                 }
                 required
                 rows={4}
-                className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-all focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/20"
               />
               <div className="flex gap-2">
-                <Button type="submit">Post question</Button>
+                <Button type="submit" className="active:scale-[0.97] transition-all">Post question</Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -319,6 +268,7 @@ export function CommunityQuestionBoard() {
                     setUseCustomTag(false);
                     setCustomTag("");
                   }}
+                  className="active:scale-[0.97] transition-all"
                 >
                   Cancel
                 </Button>
@@ -335,13 +285,14 @@ export function CommunityQuestionBoard() {
             placeholder="Search questions by title, author, body, or tags..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
+            className="pl-8 focus-visible:ring-primary/20"
           />
         </div>
         <Button
           type="button"
           variant={showFilters ? "secondary" : "outline"}
           onClick={() => setShowFilters((prev) => !prev)}
+          className="active:scale-[0.97] transition-all"
         >
           <Filter className="h-4 w-4" />
           Filters
@@ -349,8 +300,8 @@ export function CommunityQuestionBoard() {
       </div>
 
       {showFilters && (
-        <Card>
-          <CardContent className="flex flex-col gap-4">
+        <Card className="animate-in fade-in duration-200">
+          <CardContent className="flex flex-col gap-4 pt-6">
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Filter by tags
@@ -363,6 +314,7 @@ export function CommunityQuestionBoard() {
                     size="sm"
                     variant={activeFilterTag === tag ? "default" : "outline"}
                     onClick={() => setActiveFilterTag(tag)}
+                    className="active:scale-[0.95] transition-transform duration-100"
                   >
                     {tag}
                   </Button>
@@ -375,171 +327,176 @@ export function CommunityQuestionBoard() {
                 Sort
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "latest" ? "default" : "outline"}
-                  onClick={() => setSortBy("latest")}
-                >
-                  Latest
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "oldest" ? "default" : "outline"}
-                  onClick={() => setSortBy("oldest")}
-                >
-                  Oldest
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "upvotes-desc" ? "default" : "outline"}
-                  onClick={() => setSortBy("upvotes-desc")}
-                >
-                  Upvotes Desc
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "upvotes-asc" ? "default" : "outline"}
-                  onClick={() => setSortBy("upvotes-asc")}
-                >
-                  Upvotes Asc
-                </Button>
+                {(["latest", "oldest", "upvotes-desc", "upvotes-asc"] as const).map((mode) => (
+                  <Button
+                    key={mode}
+                    type="button"
+                    size="sm"
+                    variant={sortBy === mode ? "default" : "outline"}
+                    onClick={() => setSortBy(mode)}
+                    className="active:scale-[0.95] transition-transform duration-100 capitalize"
+                  >
+                    {mode.replace("-", " ")}
+                  </Button>
+                ))}
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="flex flex-col gap-2">
-        {filteredQuestions.map((q) => (
-          <Card
-            key={q.id}
-            className={cn(
-              "cursor-pointer transition-shadow hover:shadow-md",
-              selectedId === q.id && "ring-2 ring-primary/30",
-            )}
-            onClick={() => setSelectedId(q.id)}
-          >
-            <CardContent className="flex gap-4 py-4">
-              <VoteControls
-                score={getScore(q)}
-                userVote={votes[q.id] ?? null}
-                onVote={(dir) => {
-                  handleVote(q.id, dir);
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  {q.tags.map((tag) => (
-                    <Badge key={`${q.id}-${tag}`} variant="secondary">
-                      {tag}
-                    </Badge>
-                  ))}
-                  <span className="text-xs text-muted-foreground">
-                    {q.author} ·{" "}
-                    {new Date(q.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
+      {loading ? (
+        <div className="flex h-32 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {filteredQuestions.map((q, index) => (
+            <Card
+              key={q.id}
+              className={cn(
+                "cursor-pointer transition-all duration-300 hover:shadow-md border-border/80 active:scale-[0.99] animate-in fade-in slide-in-from-bottom-2",
+                selectedId === q.id && "ring-2 ring-primary/30 bg-primary/[0.01]",
+              )}
+              onClick={() => setSelectedId(q.id)}
+              style={{ animationDelay: `${index * 40}ms`, animationFillMode: "both" }}
+            >
+              <CardContent className="flex gap-4 py-4">
+                <VoteControls
+                  score={getScore(q)}
+                  userVote={q.userVote ?? null}
+                  onVote={(dir) => {
+                    handleVote(q.id, dir);
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    {q.tags.map((tag) => (
+                      <Badge key={`${q.id}-${tag}`} variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {tag}
+                      </Badge>
+                    ))}
+                    <span className="text-[11px] text-muted-foreground">
+                      {q.author} ·{" "}
+                      {new Date(q.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <h3 className="font-medium leading-snug text-sm sm:text-base">{q.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    {q.body}
+                  </p>
+                  <div className="mt-2.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>
+                      {q.answers.length} {q.answers.length === 1 ? "answer" : "answers"}
+                    </span>
+                  </div>
                 </div>
-                <h3 className="font-medium leading-snug">{q.title}</h3>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {q.body}
-                </p>
-                <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  {q.answers.length}{" "}
-                  {q.answers.length === 1 ? "answer" : "answers"}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {filteredQuestions.length === 0 && (
-          <Card>
-            <CardContent className="py-10 text-center text-muted-foreground">
-              No questions match your current search/filter.
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {!loading && filteredQuestions.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="py-10 text-center text-muted-foreground">
+            No community questions match your current search/filter.
+          </CardContent>
+        </Card>
+      )}
 
       <SlideOverPanel
-        open={selected !== null}
+        open={!!selectedId}
         onClose={() => setSelectedId(null)}
-        title={selected?.title}
+        title="Question Details"
       >
         {selected && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <div className="mb-2 flex flex-wrap items-center gap-2">
+          <div className="flex h-full flex-col">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
                 {selected.tags.map((tag) => (
-                  <Badge key={`${selected.id}-${tag}`} variant="secondary">
+                  <Badge key={tag} variant="secondary">
                     {tag}
                   </Badge>
                 ))}
                 <span className="text-xs text-muted-foreground">
                   Asked by {selected.author} ·{" "}
                   {new Date(selected.createdAt).toLocaleDateString("en-US", {
-                    month: "long",
+                    month: "short",
                     day: "numeric",
                     year: "numeric",
                   })}
                 </span>
               </div>
-              <p className="leading-relaxed text-muted-foreground">
+
+              <h2 className="text-xl font-bold leading-snug">{selected.title}</h2>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                 {selected.body}
               </p>
-            </div>
 
-            <div>
-              <h3 className="mb-3 text-sm font-semibold">
-                {selected.answers.length}{" "}
-                {selected.answers.length === 1 ? "Answer" : "Answers"}
+              <div className="my-6 h-px bg-border" />
+
+              <h3 className="mb-4 font-semibold">
+                Answers ({selected.answers.length})
               </h3>
-              {selected.answers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No answers yet. Be the first to help!
-                </p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {selected.answers.map((a) => (
-                    <Card key={a.id} size="sm">
-                      <CardContent>
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-xs font-medium">{a.author}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(a.createdAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-sm leading-relaxed">{a.content}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-col gap-4">
+                {selected.answers.map((ans) => (
+                  <Card key={ans.id} size="sm" className="bg-muted/10 border-border/60">
+                    <CardContent className="py-3">
+                      <div className="mb-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {ans.author}
+                        </span>
+                        <span>·</span>
+                        <span>
+                          {new Date(ans.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {ans.content}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {selected.answers.length === 0 && (
+                  <p className="py-4 text-center text-sm text-muted-foreground">
+                    No answers yet. Be the first to share your thoughts!
+                  </p>
+                )}
+              </div>
             </div>
 
-            <form onSubmit={handleSubmitAnswer} className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold">Your answer</h3>
-              <textarea
-                placeholder="Share your knowledge..."
-                value={answerText}
-                onChange={(e) => setAnswerText(e.target.value)}
-                rows={4}
-                className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-              <Button type="submit" className="w-fit">
-                Post answer
-              </Button>
-            </form>
+            <div className="border-t border-border bg-card px-6 py-4">
+              <form onSubmit={handleSubmitAnswer} className="flex flex-col gap-3">
+                <textarea
+                  placeholder="Type your answer here..."
+                  value={answerText}
+                  onChange={(e) => setAnswerText(e.target.value)}
+                  required
+                  rows={3}
+                  className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-all focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/20"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSelectedId(null)}
+                    className="active:scale-[0.97] transition-all"
+                  >
+                    Close
+                  </Button>
+                  <Button type="submit" className="active:scale-[0.97] transition-all">Submit Answer</Button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </SlideOverPanel>

@@ -24,7 +24,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { BlurryImage } from "@/components/ui/BlurryImage";
 
 const learnItems = [
   { href: "/learn/system-design", label: "System Design" },
@@ -235,7 +235,7 @@ export function Sidebar() {
       <Separator className="mt-auto" />
       <div className="px-3 pt-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Image
+          <BlurryImage
             src="/images/aryan-bola.jpg"
             alt="Aryan Bola"
             className="size-8 rounded-full border"

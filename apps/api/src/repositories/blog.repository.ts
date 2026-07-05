@@ -33,3 +33,26 @@ export async function findBlogBySlug(slug: string) {
     .where("slug", "=", slug)
     .executeTakeFirst();
 }
+
+export async function createBlogPost(data: {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  tag: string;
+}) {
+  return db
+    .insertInto("blog_posts")
+    .values({
+      id: data.id,
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      author: data.author,
+      tag: data.tag,
+    })
+    .execute();
+}

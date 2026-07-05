@@ -79,3 +79,64 @@ export interface DashboardFeedItem {
   author?: string;
   publishedAt: string;
 }
+
+export interface CommunityAnswer {
+  id: string;
+  questionId: string;
+  author: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommunityQuestion {
+  id: string;
+  title: string;
+  body: string;
+  author: string;
+  tags: string[];
+  createdAt: string;
+  upvotes: number;
+  downvotes: number;
+  answers: CommunityAnswer[];
+  userVote?: "up" | "down" | null;
+}
+
+export interface CommunityProject {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  repoUrl?: string;
+  demoUrl?: string;
+  tags: string[];
+  createdAt: string;
+  upvotes: number;
+  ratingSum: number;
+  ratingCount: number;
+  userVote?: "up" | "down" | null;
+  userRating?: number | null;
+}
+
+export interface CodingQuestion {
+  id: string;
+  title: string;
+  slug: string;
+  categoryLabel: string;
+  difficulty: "easy" | "medium" | "hard";
+  prompt: string;
+  solutionExplanation: string;
+  solutionCode: string;
+  language: string;
+}
+
+export interface LearnArticle {
+  slug: string;
+  title: string;
+  authorName: string;
+  categorySlug: CategorySlug;
+  categoryTitle: string;
+  sectionTitle: string;
+  content: string;
+  locked?: boolean;
+  readTimeMinutes: number;
+}

@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  averageRating,
-  INITIAL_COMMUNITY_PROJECTS,
-  type CommunityProject,
-} from "@/lib/community-data";
-import { ExternalLink, Filter, Github, Plus, Search, Star } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type CommunityProject } from "@repo/types";
+import { ExternalLink, Filter, Github, Plus, Search, Star, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,58 +12,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { VoteControls, type VoteDirection } from "./VoteControls";
+import { VoteControls } from "./VoteControls";
 import { cn } from "@/lib/utils";
+import { getProjects, voteProject, rateProject, createProject } from "@/lib/api";
 
-const PROJECTS_KEY = "crackitt-community-projects";
-const PROJECT_VOTES_KEY = "crackitt-project-votes";
-const PROJECT_RATINGS_KEY = "crackitt-project-ratings";
+const DEMO_USER_ID = "demo-user";
 
-type StoredVotes = Record<string, VoteDirection>;
-type StoredRatings = Record<string, number>;
-
-function loadProjects(): CommunityProject[] {
-  if (typeof window === "undefined") return INITIAL_COMMUNITY_PROJECTS;
-  try {
-    const raw = localStorage.getItem(PROJECTS_KEY);
-    return raw
-      ? (JSON.parse(raw) as CommunityProject[])
-      : INITIAL_COMMUNITY_PROJECTS;
-  } catch {
-    return INITIAL_COMMUNITY_PROJECTS;
-  }
-}
-
-function saveProjects(projects: CommunityProject[]) {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-}
-
-function loadProjectVotes(): StoredVotes {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(PROJECT_VOTES_KEY);
-    return raw ? (JSON.parse(raw) as StoredVotes) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveProjectVotes(votes: StoredVotes) {
-  localStorage.setItem(PROJECT_VOTES_KEY, JSON.stringify(votes));
-}
-
-function loadProjectRatings(): StoredRatings {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(PROJECT_RATINGS_KEY);
-    return raw ? (JSON.parse(raw) as StoredRatings) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveProjectRatings(ratings: StoredRatings) {
-  localStorage.setItem(PROJECT_RATINGS_KEY, JSON.stringify(ratings));
+function averageRating(project: CommunityProject): number {
+  if (project.ratingCount === 0) return 0;
+  return project.ratingSum / project.ratingCount;
 }
 
 function StarRating({
@@ -76,7 +29,7 @@ function StarRating({
   onRate,
 }: {
   value: number;
-  userRating?: number;
+  userRating?: number | null;
   onRate: (stars: number) => void;
 }) {
   return (
@@ -86,11 +39,11 @@ function StarRating({
           key={star}
           type="button"
           onClick={() => onRate(star)}
-          className="rounded p-0.5 transition-colors hover:text-primary"
+          className="rounded p-0.5 transition-all duration-150 hover:text-primary active:scale-[0.85]"
         >
           <Star
             className={cn(
-              "h-4 w-4",
+              "h-4 w-4 transition-colors",
               star <= Math.round(value)
                 ? "fill-primary text-primary"
                 : "text-muted-foreground/40",
@@ -107,13 +60,8 @@ function StarRating({
 }
 
 export function ProjectShowcase() {
-  const [projects, setProjects] = useState<CommunityProject[]>(() =>
-    loadProjects(),
-  );
-  const [votes, setVotes] = useState<StoredVotes>(() => loadProjectVotes());
-  const [ratings, setRatings] = useState<StoredRatings>(() =>
-    loadProjectRatings(),
-  );
+  const [projects, setProjects] = useState<CommunityProject[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showSubmit, setShowSubmit] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState("");
@@ -129,96 +77,76 @@ export function ProjectShowcase() {
     tags: "",
   });
 
-  function handleVote(projectId: string, direction: "up" | "down") {
-    const current = votes[projectId] ?? null;
-    const nextVote: VoteDirection = current === direction ? null : direction;
-
-    setProjects((prev) => {
-      const updated = prev.map((p) => {
-        if (p.id !== projectId) return p;
-        let up = p.upvotes;
-        if (current === "up") up--;
-        if (nextVote === "up") up++;
-        return { ...p, upvotes: up };
+  useEffect(() => {
+    getProjects(DEMO_USER_ID)
+      .then((data) => {
+        setProjects(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading projects: ", err);
+        setLoading(false);
       });
-      saveProjects(updated);
-      return updated;
-    });
+  }, []);
 
-    setVotes((prev) => {
-      const next = { ...prev, [projectId]: nextVote };
-      saveProjectVotes(next);
-      return next;
-    });
+  function handleVote(projectId: string, direction: "up" | "down") {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return;
+
+    const current = project.userVote;
+    const nextVote = current === direction ? null : direction;
+
+    voteProject(projectId, nextVote)
+      .then((updated) => {
+        setProjects((prev) =>
+          prev.map((p) => (p.id === projectId ? updated : p))
+        );
+      })
+      .catch((err) => console.error("Error voting: ", err));
   }
 
   function handleRate(projectId: string, stars: number) {
-    const previous = ratings[projectId];
-
-    setProjects((prev) => {
-      const updated = prev.map((p) => {
-        if (p.id !== projectId) return p;
-        let sum = p.ratingSum;
-        let count = p.ratingCount;
-        if (previous) {
-          sum -= previous;
-        } else {
-          count++;
-        }
-        sum += stars;
-        return { ...p, ratingSum: sum, ratingCount: count };
-      });
-      saveProjects(updated);
-      return updated;
-    });
-
-    setRatings((prev) => {
-      const next = { ...prev, [projectId]: stars };
-      saveProjectRatings(next);
-      return next;
-    });
+    rateProject(projectId, stars)
+      .then((updated) => {
+        setProjects((prev) =>
+          prev.map((p) => (p.id === projectId ? updated : p))
+        );
+      })
+      .catch((err) => console.error("Error rating: ", err));
   }
 
   function handleSubmitProject(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.title.trim() || !draft.description.trim()) return;
 
-    const project: CommunityProject = {
-      id: `cp-user-${Date.now()}`,
+    createProject({
       title: draft.title.trim(),
       description: draft.description.trim(),
-      author: "You",
       repoUrl: draft.repoUrl.trim() || undefined,
       demoUrl: draft.demoUrl.trim() || undefined,
       tags: draft.tags
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
-      createdAt: new Date().toISOString(),
-      upvotes: 0,
-      ratingSum: 0,
-      ratingCount: 0,
-    };
-
-    const updated = [project, ...projects];
-    setProjects(updated);
-    saveProjects(updated);
-    setDraft({
-      title: "",
-      description: "",
-      repoUrl: "",
-      demoUrl: "",
-      tags: "",
-    });
-    setShowSubmit(false);
+    })
+      .then((created) => {
+        setProjects((prev) => [created, ...prev]);
+        setDraft({
+          title: "",
+          description: "",
+          repoUrl: "",
+          demoUrl: "",
+          tags: "",
+        });
+        setShowSubmit(false);
+      })
+      .catch((err) => console.error("Error submitting project: ", err));
   }
 
   const filterTags = useMemo(
     () => [
       "All",
-      ...Array.from(
-        new Set(projects.flatMap((project) => project.tags)),
-      ).sort(),
+      ...Array.from(new Set(projects.flatMap((project) => project.tags))).sort(),
     ],
     [projects],
   );
@@ -270,14 +198,17 @@ export function ProjectShowcase() {
             Showcase complex builds and rate community projects.
           </p>
         </div>
-        <Button onClick={() => setShowSubmit(!showSubmit)}>
+        <Button
+          onClick={() => setShowSubmit(!showSubmit)}
+          className="active:scale-[0.97] transition-all duration-200"
+        >
           <Plus className="h-4 w-4" />
           Submit project
         </Button>
       </div>
 
       {showSubmit && (
-        <Card>
+        <Card className="transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-base">Submit your project</CardTitle>
             <CardDescription>
@@ -285,15 +216,13 @@ export function ProjectShowcase() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form
-              onSubmit={handleSubmitProject}
-              className="flex flex-col gap-3"
-            >
+            <form onSubmit={handleSubmitProject} className="flex flex-col gap-3">
               <Input
                 placeholder="Project title"
                 value={draft.title}
                 onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                 required
+                className="focus-visible:ring-primary/20"
               />
               <textarea
                 placeholder="Describe what you built and why it's impressive..."
@@ -303,33 +232,33 @@ export function ProjectShowcase() {
                 }
                 required
                 rows={4}
-                className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-all focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/20"
               />
               <Input
                 placeholder="GitHub URL (optional)"
                 value={draft.repoUrl}
-                onChange={(e) =>
-                  setDraft({ ...draft, repoUrl: e.target.value })
-                }
+                onChange={(e) => setDraft({ ...draft, repoUrl: e.target.value })}
+                className="focus-visible:ring-primary/20"
               />
               <Input
                 placeholder="Demo URL (optional)"
                 value={draft.demoUrl}
-                onChange={(e) =>
-                  setDraft({ ...draft, demoUrl: e.target.value })
-                }
+                onChange={(e) => setDraft({ ...draft, demoUrl: e.target.value })}
+                className="focus-visible:ring-primary/20"
               />
               <Input
                 placeholder="Tags (comma-separated, e.g. Rust, Kafka, Docker)"
                 value={draft.tags}
                 onChange={(e) => setDraft({ ...draft, tags: e.target.value })}
+                className="focus-visible:ring-primary/20"
               />
               <div className="flex gap-2">
-                <Button type="submit">Submit</Button>
+                <Button type="submit" className="active:scale-[0.97] transition-all">Submit</Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowSubmit(false)}
+                  className="active:scale-[0.97] transition-all"
                 >
                   Cancel
                 </Button>
@@ -346,13 +275,14 @@ export function ProjectShowcase() {
             placeholder="Search projects by title, author, description, or tags..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
+            className="pl-8 focus-visible:ring-primary/20"
           />
         </div>
         <Button
           type="button"
           variant={showFilters ? "secondary" : "outline"}
           onClick={() => setShowFilters((prev) => !prev)}
+          className="active:scale-[0.97] transition-all"
         >
           <Filter className="h-4 w-4" />
           Filters
@@ -360,8 +290,8 @@ export function ProjectShowcase() {
       </div>
 
       {showFilters && (
-        <Card>
-          <CardContent className="flex flex-col gap-4">
+        <Card className="animate-in fade-in slide-in-from-top-1 duration-200">
+          <CardContent className="flex flex-col gap-4 pt-6">
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Filter by tag
@@ -374,6 +304,7 @@ export function ProjectShowcase() {
                     size="sm"
                     variant={activeTag === tag ? "default" : "outline"}
                     onClick={() => setActiveTag(tag)}
+                    className="active:scale-[0.95] transition-transform duration-100"
                   >
                     {tag}
                   </Button>
@@ -386,106 +317,96 @@ export function ProjectShowcase() {
                 Sort
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "latest" ? "default" : "outline"}
-                  onClick={() => setSortBy("latest")}
-                >
-                  Latest
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "oldest" ? "default" : "outline"}
-                  onClick={() => setSortBy("oldest")}
-                >
-                  Oldest
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "upvotes-desc" ? "default" : "outline"}
-                  onClick={() => setSortBy("upvotes-desc")}
-                >
-                  Upvotes Desc
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={sortBy === "upvotes-asc" ? "default" : "outline"}
-                  onClick={() => setSortBy("upvotes-asc")}
-                >
-                  Upvotes Asc
-                </Button>
+                {(["latest", "oldest", "upvotes-desc", "upvotes-asc"] as const).map((mode) => (
+                  <Button
+                    key={mode}
+                    type="button"
+                    size="sm"
+                    variant={sortBy === mode ? "default" : "outline"}
+                    onClick={() => setSortBy(mode)}
+                    className="active:scale-[0.95] transition-transform duration-100 capitalize"
+                  >
+                    {mode.replace("-", " ")}
+                  </Button>
+                ))}
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="flex flex-col gap-3">
-        {filtered.map((project) => (
-          <Card key={project.id} className="transition-shadow hover:shadow-md">
-            <CardContent className="flex gap-4 ">
-              <VoteControls
-                score={project.upvotes}
-                userVote={votes[project.id] ?? null}
-                onVote={(dir) => handleVote(project.id, dir)}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <CardTitle className="text-base">{project.title}</CardTitle>
-                </div>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  by {project.author} ·{" "}
-                  {new Date(project.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-                <CardDescription className="line-clamp-3">
-                  {project.description}
-                </CardDescription>
-                <div className="mt-3 flex flex-wrap items-center gap-4">
-                  <StarRating
-                    value={averageRating(project)}
-                    userRating={ratings[project.id]}
-                    onRate={(stars) => handleRate(project.id, stars)}
-                  />
-                  <div className="flex gap-2">
-                    {project.repoUrl && (
-                      <a
-                        href={project.repoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
-                      >
-                        <Github className="h-3.5 w-3.5" />
-                        Repo
-                      </a>
-                    )}
-                    {project.demoUrl && (
-                      <a
-                        href={project.demoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Demo
-                      </a>
-                    )}
+      {loading ? (
+        <div className="flex h-32 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filtered.map((project, index) => (
+            <Card
+              key={project.id}
+              className="transition-all duration-300 hover:shadow-md active:scale-[0.99] border-border/80 animate-in fade-in slide-in-from-bottom-2"
+              style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+            >
+              <CardContent className="flex gap-4">
+                <VoteControls
+                  score={project.upvotes}
+                  userVote={project.userVote ?? null}
+                  onVote={(dir) => handleVote(project.id, dir)}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-base">{project.title}</CardTitle>
+                  </div>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    by {project.author} ·{" "}
+                    {new Date(project.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <CardDescription className="line-clamp-3 leading-relaxed">
+                    {project.description}
+                  </CardDescription>
+                  <div className="mt-3 flex flex-wrap items-center gap-4">
+                    <StarRating
+                      value={averageRating(project)}
+                      userRating={project.userRating}
+                      onRate={(stars) => handleRate(project.id, stars)}
+                    />
+                    <div className="flex gap-2">
+                      {project.repoUrl && (
+                        <a
+                          href={project.repoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Github className="h-3.5 w-3.5" />
+                          Repo
+                        </a>
+                      )}
+                      {project.demoUrl && (
+                        <a
+                          href={project.demoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Demo
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      {filtered.length === 0 && (
-        <Card>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      {!loading && filtered.length === 0 && (
+        <Card className="border-dashed">
           <CardContent className="py-10 text-center text-muted-foreground">
             No projects match your current search/filter.
           </CardContent>

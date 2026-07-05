@@ -1,10 +1,12 @@
 import { PracticeSection } from "@/components/PracticeSection";
-import { codingQuestions } from "@/lib/coding-questions";
+import { getCodingQuestions } from "@/lib/api";
 
-export default function CodingPracticePage() {
+export default async function CodingPracticePage() {
+  const questions = await getCodingQuestions();
+
   return (
     <PracticeSection
-      questions={codingQuestions}
+      questions={questions}
       basePath="/practice/coding"
       title="Coding Practice"
       description="Algorithm, data structure, and frontend coding problems with code solutions."

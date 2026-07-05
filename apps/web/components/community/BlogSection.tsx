@@ -9,7 +9,7 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,39 +20,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { type UserBlogDraft } from "@/lib/community-data";
 import { cn } from "@/lib/utils";
+import { getBookmarkedBlogs, toggleBlogBookmark } from "@/lib/api";
 
-const BOOKMARKS_KEY = "crackitt-blog-bookmarks";
-const USER_BLOGS_KEY = "crackitt-user-blogs";
-
-function loadBookmarks(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = localStorage.getItem(BOOKMARKS_KEY);
-    return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function saveBookmarks(ids: Set<string>) {
-  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify([...ids]));
-}
-
-function loadUserBlogs(): UserBlogDraft[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(USER_BLOGS_KEY);
-    return raw ? (JSON.parse(raw) as UserBlogDraft[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveUserBlogs(blogs: UserBlogDraft[]) {
-  localStorage.setItem(USER_BLOGS_KEY, JSON.stringify(blogs));
-}
+const DEMO_USER_ID = "demo-user";
 
 type BlogItem = BlogPost & { isUserSubmitted?: boolean };
 
@@ -61,22 +32,27 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string>("All");
-  const [bookmarks, setBookmarks] = useState<Set<string>>(() => loadBookmarks());
-  const [userBlogs, setUserBlogs] = useState<UserBlogDraft[]>(() =>
-    loadUserBlogs(),
-  );
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
 
-  const allPosts: BlogItem[] = useMemo(
-    () => [
-      ...userBlogs.map((b) => ({ ...b, isUserSubmitted: true })),
-      ...initialPosts,
-    ],
-    [initialPosts, userBlogs],
-  );
+  useEffect(() => {
+    getBookmarkedBlogs(DEMO_USER_ID)
+      .then((data) => {
+        setBookmarks(new Set(data));
+      })
+      .catch((err) => console.error("Error loading bookmarks: ", err));
+  }, []);
+
+  const allPosts: BlogItem[] = useMemo(() => {
+    return initialPosts.map((p) => ({
+      ...p,
+      // If the author is Aryan, we can mark it as user submitted for demonstration
+      isUserSubmitted: p.author === "Aryan" || p.author === "You",
+    }));
+  }, [initialPosts]);
 
   const availableTags = useMemo(
     () => ["All", ...Array.from(new Set(allPosts.map((p) => p.tag))).sort()],
-    [allPosts],
+    [allPosts]
   );
 
   const filtered = useMemo(() => {
@@ -94,20 +70,26 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
           p.title.toLowerCase().includes(q) ||
           p.excerpt.toLowerCase().includes(q) ||
           p.author.toLowerCase().includes(q) ||
-          p.tag.toLowerCase().includes(q),
+          p.tag.toLowerCase().includes(q)
       );
     }
     return posts;
   }, [allPosts, bookmarks, search, selectedTag, showBookmarks]);
 
   function toggleBookmark(id: string) {
-    setBookmarks((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      saveBookmarks(next);
-      return next;
-    });
+    toggleBlogBookmark(id, DEMO_USER_ID)
+      .then((res) => {
+        setBookmarks((prev) => {
+          const next = new Set(prev);
+          if (res.bookmarked) {
+            next.add(id);
+          } else {
+            next.delete(id);
+          }
+          return next;
+        });
+      })
+      .catch((err) => console.error("Error toggling bookmark: ", err));
   }
 
   return (
@@ -119,7 +101,10 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
             Read, write, and bookmark community blogs.
           </p>
         </div>
-        <Button render={<Link href="/community/blog/create" />}>
+        <Button
+          render={<Link href="/community/blog/create" />}
+          className="active:scale-[0.97] transition-transform duration-150"
+        >
           <PenLine className="h-4 w-4" />
           Write a blog
         </Button>
@@ -132,13 +117,14 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
             placeholder="Search blogs by title, author, or tag..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 w-full"
+            className="pl-8 w-full focus-visible:ring-primary/20"
           />
         </div>
         <Button
           type="button"
           variant={showFilters ? "secondary" : "outline"}
           onClick={() => setShowFilters((prev) => !prev)}
+          className="active:scale-[0.97] transition-all"
         >
           <Filter className="h-4 w-4" />
           Filters
@@ -146,7 +132,7 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
       </div>
 
       {showFilters && (
-        <Card>
+        <Card className="animate-in fade-in duration-200">
           <CardContent className="flex flex-col gap-4 pt-6">
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -160,6 +146,7 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
                     size="sm"
                     variant={selectedTag === tag ? "default" : "outline"}
                     onClick={() => setSelectedTag(tag)}
+                    className="active:scale-[0.95] transition-all duration-100"
                   >
                     {tag}
                   </Button>
@@ -177,9 +164,10 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
                   size="sm"
                   variant={showBookmarks ? "default" : "outline"}
                   onClick={() => setShowBookmarks((prev) => !prev)}
+                  className="active:scale-[0.95] transition-all duration-100"
                 >
                   {showBookmarks ? (
-                    <BookmarkCheck className="h-4 w-4" />
+                    <BookmarkCheck className="h-4 w-4 text-emerald-500" />
                   ) : (
                     <Bookmark className="h-4 w-4" />
                   )}
@@ -192,7 +180,7 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
       )}
 
       {filtered.length === 0 ? (
-        <Card>
+        <Card className="border-dashed">
           <CardContent className="py-10 text-center text-muted-foreground">
             {showBookmarks
               ? "No bookmarked blogs yet. Save posts you want to revisit."
@@ -201,17 +189,18 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {filtered.map((post) => (
+          {filtered.map((post, index) => (
             <Card
               key={post.id}
-              className="relative transition-shadow hover:shadow-md"
+              className="relative transition-all duration-300 hover:shadow-md border-border/80 active:scale-[0.99] animate-in fade-in slide-in-from-bottom-2"
+              style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
             >
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{post.tag}</Badge>
                     {post.isUserSubmitted && (
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
                         Your post
                       </Badge>
                     )}
@@ -227,29 +216,30 @@ export function BlogSection({ initialPosts }: { initialPosts: BlogPost[] }) {
                     variant="ghost"
                     size="icon-sm"
                     className={cn(
-                      bookmarks.has(post.id) && "text-primary",
+                      "active:scale-90 transition-transform duration-100",
+                      bookmarks.has(post.id) && "text-primary hover:text-primary/80"
                     )}
                     onClick={() => toggleBookmark(post.id)}
                   >
                     {bookmarks.has(post.id) ? (
-                      <Bookmark fill="currentColor" className="h-6 w-6" />
+                      <Bookmark fill="currentColor" className="h-5 w-5 animate-in zoom-in duration-200" />
                     ) : (
-                      <Bookmark className="h-6 w-6" />
+                      <Bookmark className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
-                <CardTitle className="text-base">
+                <CardTitle className="text-base mt-2">
                   <Link
                     href={`/community/blog/${post.slug}`}
-                    className="hover:text-primary hover:underline"
+                    className="hover:text-primary hover:underline transition-colors"
                   >
                     {post.title}
                   </Link>
                 </CardTitle>
-                <CardDescription className="line-clamp-2">
+                <CardDescription className="line-clamp-2 leading-relaxed">
                   {post.excerpt}
                 </CardDescription>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-2">
                   By {post.author}
                 </p>
               </CardHeader>

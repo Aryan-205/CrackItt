@@ -62,7 +62,15 @@ function renderContent(content: string) {
   });
 }
 
-export function LearnArticleView({ article }: { article: LearnArticle }) {
+import { CompletionButton } from "./CompletionButton";
+
+export function LearnArticleView({
+  article,
+  initialCompleted,
+}: {
+  article: LearnArticle;
+  initialCompleted: boolean;
+}) {
   const categoryHref = `/learn/${article.categorySlug}`;
   const [rating, setRating] = useState(0);
 
@@ -93,15 +101,11 @@ export function LearnArticleView({ article }: { article: LearnArticle }) {
         >
           <ArrowLeft className="h-4 w-4 shrink-0 text-primary" /> Back to {article.categoryTitle}
         </Button>
-        <Button
-          variant="outline"
-          className="h-auto px-0 text-muted-foreground p-2 hover:bg-green-600 hover:text-white group active:scale-95 transition-all duration-300"
-          onClick={() => {
-            console.log("Mark as complete");
-          }}
-        >
-          Mark as complete <Check className="h-4 w-4 shrink-0 text-primary group-hover:text-white" />
-        </Button>
+        <CompletionButton
+          itemId={`la-${article.categorySlug}-${article.slug}`}
+          itemType="learn_article"
+          initialCompleted={initialCompleted}
+        />
       </div>
       <div>
         <Card>
