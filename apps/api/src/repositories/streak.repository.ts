@@ -1,7 +1,11 @@
 import { db } from "../db/db";
 
+// Local calendar day, not UTC — toISOString() would roll the day over for any
+// non-zero timezone offset.
 function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0]!;
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function getWeekDates(): Date[] {

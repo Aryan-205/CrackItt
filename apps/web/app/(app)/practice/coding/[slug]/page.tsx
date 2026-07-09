@@ -1,4 +1,4 @@
-import { CodeBlock } from "@/components/CodeBlock";
+import { SolutionReveal } from "@/components/SolutionReveal";
 import { getCodingQuestion, getUserCompletions } from "@/lib/api";
 import { DEMO_USER_ID } from "@/lib/demo-user";
 import Link from "next/link";
@@ -76,24 +76,11 @@ export default async function CodingQuestionDetailPage({
           </p>
         </CardContent>
       </Card>
-      <Card className="border-border/80">
-        <CardHeader>
-          <CardTitle>Explanation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="leading-relaxed text-muted-foreground whitespace-pre-wrap">
-            {question.solutionExplanation}
-          </p>
-        </CardContent>
-      </Card>
-      <Card className="border-border/80">
-        <CardHeader>
-          <CardTitle>Solution</CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-hidden p-0">
-          <CodeBlock code={question.solutionCode} language={question.language} />
-        </CardContent>
-      </Card>
+      <SolutionReveal
+        explanation={question.solutionExplanation}
+        code={question.solutionCode}
+        language={question.language}
+      />
     </div>
   );
 }

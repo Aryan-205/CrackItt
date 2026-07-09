@@ -1,7 +1,12 @@
 import "dotenv/config";
 import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
+import { Pool, types } from "pg";
 import type { Database } from "../types/db";
+
+// Keep DATE columns as "YYYY-MM-DD" strings. pg's default parser turns them into
+// Date objects at local midnight, which shifts the calendar day across timezones
+// and breaks the string comparisons the streak logic relies on.
+types.setTypeParser(types.builtins.DATE, (value) => value);
 
 const dialect = new PostgresDialect({
   pool: new Pool({

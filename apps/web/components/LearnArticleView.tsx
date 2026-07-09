@@ -6,62 +6,12 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import type { LearnArticle } from "@/lib/learn-articles";
-import { ArrowLeft, Check, Lock, Star } from "lucide-react";
+import type { LearnArticle } from "@repo/types";
+import { ArrowLeft, Star } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-function renderContent(content: string) {
-  const blocks = content.split("\n\n");
-
-  return blocks.map((block, index) => {
-    if (block.startsWith("## ")) {
-      return (
-        <h2
-          key={index}
-          className="mt-8 mb-3 text-lg font-semibold text-foreground first:mt-0"
-        >
-          {block.replace(/^## /, "")}
-        </h2>
-      );
-    }
-
-    if (block.startsWith("### ")) {
-      return (
-        <h3 key={index} className="mt-6 mb-2 font-semibold text-foreground">
-          {block.replace(/^### /, "")}
-        </h3>
-      );
-    }
-
-    if (block.startsWith("- ")) {
-      const items = block.split("\n").filter((line) => line.startsWith("- "));
-      return (
-        <ul key={index} className="my-3 list-disc space-y-1.5 pl-5">
-          {items.map((item, i) => (
-            <li key={i}>{item.replace(/^- /, "")}</li>
-          ))}
-        </ul>
-      );
-    }
-
-    const parts = block.split(/(\*\*[^*]+\*\*)/g);
-    return (
-      <p key={index} className="my-3 leading-relaxed">
-        {parts.map((part, i) =>
-          part.startsWith("**") && part.endsWith("**") ? (
-            <strong key={i} className="font-semibold text-foreground">
-              {part.slice(2, -2)}
-            </strong>
-          ) : (
-            <span key={i}>{part}</span>
-          ),
-        )}
-      </p>
-    );
-  });
-}
-
+import { Markdown } from "./Markdown";
 import { CompletionButton } from "./CompletionButton";
 
 export function LearnArticleView({
@@ -89,8 +39,8 @@ export function LearnArticleView({
         </p>
       </div>
       
-      <article className="text-muted-foreground">
-        {renderContent(article.content)}
+      <article>
+        <Markdown content={article.content} />
       </article>
 
       <div className="border-t border-border pt-6 flex justify-between w-full ">

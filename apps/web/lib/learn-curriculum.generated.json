@@ -1,0 +1,182 @@
+{
+  "backend": {
+    "categorySlug": "backend",
+    "title": "Backend",
+    "sections": [
+      {
+        "id": "roadmap",
+        "title": "Roadmap",
+        "lessons": [
+          {
+            "id": "backend-roadmap",
+            "title": "Backend Roadmap"
+          }
+        ]
+      },
+      {
+        "id": "foundations",
+        "title": "Foundations",
+        "lessons": [
+          {
+            "id": "networking-essentials",
+            "title": "Networking Essentials"
+          },
+          {
+            "id": "all-about-http",
+            "title": "All About HTTP"
+          },
+          {
+            "id": "rest-architecture",
+            "title": "REST Architecture"
+          },
+          {
+            "id": "openapi-spec",
+            "title": "OpenAPI Spec"
+          }
+        ]
+      },
+      {
+        "id": "databases",
+        "title": "Databases",
+        "lessons": [
+          {
+            "id": "databases-with-postgres",
+            "title": "Databases with Postgres"
+          },
+          {
+            "id": "indexing-and-transactions",
+            "title": "Indexing & Transactions"
+          },
+          {
+            "id": "connection-pooling",
+            "title": "Connection Pooling"
+          },
+          {
+            "id": "knex-js",
+            "title": "Knex.js"
+          }
+        ]
+      },
+      {
+        "id": "caching-performance",
+        "title": "Caching & Performance",
+        "lessons": [
+          {
+            "id": "caching-and-redis",
+            "title": "Caching & Redis"
+          },
+          {
+            "id": "rate-limiting",
+            "title": "Rate Limiting"
+          }
+        ]
+      },
+      {
+        "id": "scaling-reliability",
+        "title": "Scaling & Reliability",
+        "lessons": [
+          {
+            "id": "load-balancers-and-reverse-proxies",
+            "title": "Load Balancers & Reverse Proxies"
+          },
+          {
+            "id": "message-queues-and-async-jobs",
+            "title": "Message Queues & Async Jobs"
+          },
+          {
+            "id": "dead-letter-queues-and-retries",
+            "title": "Dead Letter Queues & Retries"
+          }
+        ]
+      },
+      {
+        "id": "architecture",
+        "title": "Architecture",
+        "lessons": [
+          {
+            "id": "clean-backend-architecture",
+            "title": "Clean Backend Architecture"
+          },
+          {
+            "id": "architecture-patterns",
+            "title": "Architecture Patterns"
+          },
+          {
+            "id": "microservices",
+            "title": "Microservices"
+          },
+          {
+            "id": "ddia-and-implementation-projects",
+            "title": "DDIA & Implementation Projects"
+          }
+        ]
+      },
+      {
+        "id": "auth-security",
+        "title": "Auth & Security",
+        "lessons": [
+          {
+            "id": "jwt-oauth2-and-sessions",
+            "title": "JWT, OAuth2 & Sessions"
+          }
+        ]
+      },
+      {
+        "id": "protocols-realtime",
+        "title": "Protocols & Realtime",
+        "lessons": [
+          {
+            "id": "grpc-and-sse",
+            "title": "gRPC & SSE"
+          }
+        ]
+      },
+      {
+        "id": "observability",
+        "title": "Observability",
+        "lessons": [
+          {
+            "id": "logging-metrics-and-tracing",
+            "title": "Logging, Metrics & Tracing"
+          }
+        ]
+      },
+      {
+        "id": "media-delivery",
+        "title": "Media & Delivery",
+        "lessons": [
+          {
+            "id": "bunny-cdn-and-drm",
+            "title": "Bunny CDN & DRM"
+          }
+        ]
+      },
+      {
+        "id": "ai",
+        "title": "Working with AI",
+        "lessons": [
+          {
+            "id": "working-with-llm-apis",
+            "title": "Working with LLM APIs"
+          }
+        ]
+      }
+    ]
+  },
+  "frontend": {
+    "categorySlug": "frontend",
+    "title": "Frontend",
+    "sections": [
+      {
+        "id": "performance",
+        "title": "Performance",
+        "lessons": [
+          {
+            "id": "frontend-web-performance",
+            "title": "Frontend Web Performance"
+          }
+        ]
+      }
+    ]
+  }
+}

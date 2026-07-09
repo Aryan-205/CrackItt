@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Markdown } from "@/components/Markdown";
 
 export default async function BlogDetailPage({
   params,
@@ -46,8 +47,8 @@ export default async function BlogDetailPage({
       </div>
       <Card>
         <CardContent className="pt-6">
-          <article className="leading-relaxed text-muted-foreground">
-            {post.content}
+          <article>
+            <Markdown content={post.content} />
           </article>
         </CardContent>
       </Card>

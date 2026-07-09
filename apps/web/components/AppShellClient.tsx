@@ -67,7 +67,7 @@ export function AppShellClient({
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
           {/* Desktop Right Sidebar Panel (profile, streak widget, and content feed) */}
           {showRightPanel && (
-            <div className="hidden xl:block w-84 shrink-0 border-l border-border bg-card">
+            <div className="hidden h-full w-84 shrink-0 overflow-hidden border-l border-border bg-card xl:block">
               <AppRightPanel user={user} streak={streak} feed={feed} />
             </div>
           )}

@@ -8,7 +8,8 @@
     "start": "node dist/entrypoint.js",
     "migrate": "tsx src/db/migrate.ts",
     "seed": "tsx src/db/seed.ts",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "import-vault": "tsx src/db/import-vault.ts"
   },
   "dependencies": {
     "@repo/types": "workspace:*",

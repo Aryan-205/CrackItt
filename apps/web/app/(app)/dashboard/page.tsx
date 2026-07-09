@@ -22,7 +22,7 @@ export default async function DashboardPage() {
       
       {/* Mobile-only right panel widgets (avatar, streak logs, feed) */}
       <div className="xl:hidden mt-4">
-        <RightPanel user={user} streak={streak} feed={feed} className="p-0 border-0 bg-transparent" />
+        <RightPanel user={user} streak={streak} feed={feed} variant="inline" />
       </div>
     </div>
   );

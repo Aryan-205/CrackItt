@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
-  ChevronRight,
   Check
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -81,14 +80,22 @@ export function LearnSidebar({ className }: { className?: string }) {
               >
                 <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="flex-1 text-left text-sm truncate">{section.title}</span>
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                )}
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-muted-foreground",
+                    "transition-transform duration-200 ease-out-strong",
+                    !isOpen && "-rotate-90",
+                  )}
+                />
               </CollapsibleTrigger>
 
-              <CollapsibleContent>
+              <CollapsibleContent
+                className={cn(
+                  "h-[var(--collapsible-panel-height)] overflow-hidden",
+                  "transition-[height] duration-200 ease-out-strong",
+                  "data-[starting-style]:h-0 data-[ending-style]:h-0",
+                )}
+              >
                 <div className="relative ml-5 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-4 pb-1">
                   {section.lessons.map((lesson) => {
                     const href = `/learn/${category}/${lesson.id}`;

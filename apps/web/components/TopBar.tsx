@@ -1,4 +1,4 @@
-import { GraduationCap, Menu, PhoneCall, Search } from "lucide-react";
+import { Menu, PhoneCall, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   return (
-    <header className="flex items-center justify-between border-b border-border w-full px-4 sm:px-6 py-3 gap-3">
+    <header className="flex items-center border-b border-border w-full px-4 sm:px-6 py-3 gap-3">
       <div className="flex items-center gap-3">
         {onMenuClick && (
           <Button
@@ -23,7 +23,7 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         <span className="lg:hidden font-bold text-primary text-base">CrackItt</span>
       </div>
 
-      <div className="relative max-w-md flex-1 hidden sm:block">
+      <div className="relative w-full max-w-xs hidden sm:block">
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
@@ -39,7 +39,7 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         </Badge>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
