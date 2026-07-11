@@ -1,4 +1,4 @@
-import { Menu, PhoneCall, Search } from "lucide-react";
+import { GitCommitIcon, GithubIcon, Menu, PhoneCall, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,9 +46,8 @@ export function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           render={<Link href="https://cal.com/aryan-bola/15min" />}
           className="active:scale-[0.97] transition-all text-xs sm:text-sm px-2.5 sm:px-3"
         >
-          <PhoneCall className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="hidden xs:inline">Book a call</span>
-          <span className="xs:hidden">Book</span>
+          <GithubIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="xs:hidden">Stars</span>
         </Button>
         <ThemeToggle />
       </div>
